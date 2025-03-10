@@ -51,6 +51,8 @@ Kubernetes Monitoring Tool
 
 ### 2. 바이너리로 실행하기
 
+바이너리는 Linux 환경에서만 사용 가능합니다.
+
 1. **바이너리 다운로드**  
    - [bin/kubernetes_monitoring](https://github.com/KKamJi98/monitoring-kubernetes/blob/main/bin/kubernetes_monitoring)를 다운로드 받아 실행 권한을 부여합니다.
 
