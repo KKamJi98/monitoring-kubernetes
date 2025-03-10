@@ -20,22 +20,22 @@ Kubernetes Monitoring Tool
 
 - Python 3.8 이상
 - Python Library (kubernetes, tabulate)
-- kubectl
+- Kubernetes Client (kubectl)
 
 ## Installation & Usage
 
-### 1. Python 스크립트로 실행하기
+### 1. Git Clone & Python 실행행
 
-1. **리포지토리 클론**
+1. **Repository Clone**
   
-   ```bash
+   ```shell
    git clone https://github.com/KKamJi98/monitoring-kubernetes.git
    cd monitoring-kubernetes
    ```
 
-2. **필요 라이브러리 설치**  
+2. **라이브러리 설치**  
 
-   ```bash
+   ```shell
    pip install kubernetes tabulate
    ```
   
@@ -43,28 +43,45 @@ Kubernetes Monitoring Tool
 
 3. **스크립트 실행**  
 
-   ```bash
+   ```shell
    python kubernetes_monitoring.py
    ```
   
    - 메뉴가 표시되면 원하는 항목 번호(또는 Q)를 입력해 사용할 수 있습니다.
 
-### 2. 바이너리로 실행하기
+### 2. 실행 파일로 등록하여 사용 (Option)
 
-바이너리는 Linux 환경에서만 사용 가능합니다.
+1. **Repository Clone**
+  
+   ```shell
+   git clone https://github.com/KKamJi98/monitoring-kubernetes.git
+   cd monitoring-kubernetes
+   ```
 
-1. **바이너리 다운로드**  
-   - [bin/kubernetes_monitoring](https://github.com/KKamJi98/monitoring-kubernetes/blob/main/bin/kubernetes_monitoring)를 다운로드 받아 실행 권한을 부여합니다.
+2. **라이브러리 설치**  
 
-    ```bash
-    chmod +x kubernetes_monitoring
-    ```
+   ```shell
+   pip install kubernetes tabulate
+   ```
 
-2. **실행**  
+3. 실행 권한 부여
 
-  ```bash
-  ./kubernetes_monitoring
-  ```
+   ```shell
+   chmod u+x kubernetes_monitoring.py
+   ```
+
+4. 경로 이동
+
+   ```shell
+   sudo cp kubernetes_monitoring.py /usr/local/bin/kubernetes_monitoring
+   ```
+
+일반적으로 `/usr/local/bin`은 기본적으로 `PATH`에 포함되어 있습니다.  
+만약 `PATH`에 `/usr/local/bin` 이 없다면, `~/.shellrc` 또는 `~/.zshrc`에 다음 문구를 추가해야 합니다.  
+
+```shell
+export PATH=$PATH:/usr/local/bin
+```
 
 ## Menu Description
 
