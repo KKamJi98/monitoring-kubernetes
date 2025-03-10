@@ -6,58 +6,62 @@ import datetime
 from kubernetes import client, config
 from tabulate import tabulate
 
+
 def main_menu():
     """
     메인 메뉴 출력
     """
     print("\n===== Kubernetes Monitoring Tool =====")
     print("1) Event Monitoring")
-    print("2) Error Pod Catch (가장 최근에 재시작된 컨테이너 Top 10)")
-    print("3) Error Log Catch (가장 최근에 재시작된 컨테이너 목록에서 선택)")
+    print("2) Error Pod Catch (가장 최근에 재시작된 컨테이너 N개 확인)")
+    print("3) Error Log Catch (가장 최근에 재시작된 컨테이너 N개 확인 후 이전 컨테이너의 로그 확인)")
     print("4) Pod Monitoring (생성된 순서)")
-    print("5) Pod Monitoring (Running이 아닌 Pod: grep -ivE ' Ready')")
-    print("6) Pod Monitoring - 전체/정상/비정상 Pod 개수 출력")
+    print("5) Pod Monitoring (Running이 아닌 Pod: grep -ivE 'Running')")
+    print("6) Pod Monitoring (전체/정상/비정상 Pod 개수 출력)")
     print("7) Node Monitoring (Unhealthy Node 확인)")
     print("8) Node Monitoring (CPU/Memory 사용량 높은 순 정렬)")
     print("Q) Quit")
     return input("Select an option: ").strip()
 
-def get_tail_lines():
+
+def get_tail_lines(prompt="몇 줄씩 확인할까요? (예: 10): "):
     """
-    tail -n에 사용될 숫자 입력
+    tail -n 에 사용할 숫자 입력
     """
     while True:
-        val = input("How many lines do you want to tail? (예: 30): ").strip()
+        val = input(prompt).strip()
         if val.isdigit():
             return val
         else:
             print("숫자로 입력해주세요.")
 
+
 def watch_event_monitoring():
     """
-    1. Event Monitoring
-       - watch -n1 "kubectl get events -A --sort-by=\".metadata.managedFields[].time\" | tail -n <user_input>"
+    1) Event Monitoring
+        watch -n1 "kubectl get events -A --sort-by=\".metadata.managedFields[].time\" | tail -n <user_input>"
     """
-    tail_num = get_tail_lines()
+    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
     cmd = f'watch -n1 "kubectl get events -A --sort-by=\\".metadata.managedFields[].time\\" | tail -n {tail_num}"'
-    print(f"\nExecuting: {cmd}\n(Press Ctrl+C to stop)\n")
+    print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
+
 
 def error_pod_catch_once():
     """
-    2) Error Pod Catch (최근 재시작 컨테이너 Top 10, 단 한 번 테이블 출력)
-       - lastState.terminated.finishedAt 기준 내림차순 정렬
-       - watch 없이 한 번만 표시
+    2) Error Pod Catch
+        가장 최근에 재시작된 컨테이너 중 상위 N개를 한 번만 표시
+        lastState.terminated.finishedAt 기준으로 내림차순 정렬
     """
-    print("\n[2] 가장 최근에 재시작된 컨테이너 Top 10 (시간 기준) - 한 번만 표시")
+    print("\n[2] 가장 최근에 재시작된 컨테이너 Top N (시간 기준, 한 번만 표시)")
 
     # kubeconfig 로드
     config.load_kube_config()
     v1 = client.CoreV1Api()
 
     pods = v1.list_pod_for_all_namespaces().items
-
     restarted_containers = []
+
     for pod in pods:
         ns = pod.metadata.namespace
         p_name = pod.metadata.name
@@ -69,50 +73,50 @@ def error_pod_catch_once():
             term = c_status.last_state.terminated
             if term and term.finished_at:
                 finished_at = term.finished_at
-                # 문자열인 경우 datetime 변환
                 if isinstance(finished_at, str):
                     finished_at = datetime.datetime.fromisoformat(
                         finished_at.replace("Z", "+00:00")
                     )
                 restarted_containers.append((ns, p_name, c_status.name, finished_at))
 
-    # finishedAt 기준 내림차순 정렬 후 Top 5
+    # finishedAt 기준 내림차순 정렬
     restarted_containers.sort(key=lambda x: x[3], reverse=True)
-    top_10 = restarted_containers[:10]
 
-    if not top_10:
+    # 사용자 입력으로 몇 줄(항목)을 표시할지 결정
+    line_count = int(get_tail_lines("몇 개의 컨테이너를 표시할까요? (예: 10): "))
+    selected_containers = restarted_containers[:line_count]
+
+    if not selected_containers:
         print("재시작된 컨테이너가 없습니다.")
         return
 
     table = []
-    for ns, podname, cname, fat in top_10:
-        table.append([
-            ns,
-            podname,
-            cname,
-            fat.strftime("%Y-%m-%d %H:%M:%S")
-        ])
+    for ns, podname, cname, fat in selected_containers:
+        table.append([ns, podname, cname, fat.strftime("%Y-%m-%d %H:%M:%S")])
 
-    print("\n=== 최근 재시작된 컨테이너 Top 5 ===\n")
-    print(tabulate(
-        table,
-        headers=["Namespace", "Pod", "Container", "LastTerminatedTime"],
-        tablefmt="github"
-    ))
+    print(f"\n=== 최근 재시작된 컨테이너 Top {line_count} ===\n")
+    print(
+        tabulate(
+            table,
+            headers=["Namespace", "Pod", "Container", "LastTerminatedTime"],
+            tablefmt="github",
+        )
+    )
+
 
 def catch_error_logs():
     """
     3) Error Log Catch
-       - 가장 최근에 재시작된 컨테이너를 동일한 기준(lastState.terminated.finishedAt)으로 전체 조회.
-       - 테이블로 모두 보여주고, 인덱스를 입력받아 kubectl logs -p 출력.
+        - 최근 재시작된 컨테이너를 모두 조회하여 시간 기준으로 내림차순 정렬
+        - 목록을 보여준 뒤, 인덱스를 입력받아 해당 컨테이너의 이전 로그(-p)를 사용자가 지정한 줄 수만큼 확인
     """
     print("\n[3] Error Log Catch (가장 최근에 재시작된 컨테이너 목록에서 선택)")
     config.load_kube_config()
     v1 = client.CoreV1Api()
 
-    # 모든 Pod의 containerStatuses를 가져와 정렬
     pods = v1.list_pod_for_all_namespaces().items
     restarted_containers = []
+
     for pod in pods:
         ns = pod.metadata.namespace
         p_name = pod.metadata.name
@@ -130,80 +134,85 @@ def catch_error_logs():
                     )
                 restarted_containers.append((ns, p_name, c_status.name, finished_at))
 
-    # 최근에 재시작된 순 내림차순 (finishedAt)
+    # finishedAt 기준 내림차순 정렬
     restarted_containers.sort(key=lambda x: x[3], reverse=True)
 
-    # 테이블로 보여주기
-    if not restarted_containers:
+    # 사용자 입력으로 몇 줄(항목)을 표시할지 결정
+    line_count = int(get_tail_lines("몇 개의 컨테이너를 표시할까요? (예: 10): "))
+    displayed_containers = restarted_containers[:line_count]
+
+    if not displayed_containers:
         print("최근 재시작된 컨테이너가 없습니다.")
         return
 
     table = []
-    for i, (ns, p_name, c_name, fat) in enumerate(restarted_containers, start=1):
-        table.append([
-            i,
-            ns,
-            p_name,
-            c_name,
-            fat.strftime("%Y-%m-%d %H:%M:%S")
-        ])
+    for i, (ns, p_name, c_name, fat) in enumerate(displayed_containers, start=1):
+        table.append([i, ns, p_name, c_name, fat.strftime("%Y-%m-%d %H:%M:%S")])
 
-    print("\n=== 최근 재시작된 컨테이너 목록 (시간 기준) ===\n")
-    print(tabulate(
-        table,
-        headers=["INDEX", "Namespace", "Pod", "Container", "LastTerminatedTime"],
-        tablefmt="github"
-    ))
+    print(f"\n=== 최근 재시작된 컨테이너 목록 (시간 기준, Top {line_count}) ===\n")
+    print(
+        tabulate(
+            table,
+            headers=["INDEX", "Namespace", "Pod", "Container", "LastTerminatedTime"],
+            tablefmt="github",
+        )
+    )
 
-    # 인덱스 선택
     while True:
         sel = input("\n로그를 볼 INDEX를 입력 (Q: 종료): ").strip()
         if sel.upper() == "Q":
             return
 
         if not sel.isdigit():
-            print("숫자를 입력하거나 Q로 돌아가세요.")
+            print("숫자를 입력하거나 Q를 입력해 종료하세요.")
             continue
 
         idx = int(sel)
-        if idx < 1 or idx > len(restarted_containers):
+        if idx < 1 or idx > len(displayed_containers):
             print("인덱스 범위를 벗어났습니다.")
             continue
 
-        # 해당 컨테이너 정보
-        ns, p_name, c_name, _ = restarted_containers[idx - 1]
-        # 이전 로그 (-p), tail=50
-        cmd = f"kubectl logs -n {ns} -p {p_name} -c {c_name} --tail=50"
-        print(f"\nExecuting: {cmd}\n")
+        ns, p_name, c_name, _ = displayed_containers[idx - 1]
+        # 로그 tail 줄 수 입력받기
+        log_tail = input(
+            "몇 줄의 로그를 확인할까요? (숫자 입력 *숫자를 입력하지 않을 시 마지막 50줄 출력): "
+        ).strip()
+        if not log_tail.isdigit():
+            print("입력하신 값이 숫자가 아닙니다. 50줄을 출력합니다.")
+            log_tail = "50"
+        cmd = f"kubectl logs -n {ns} -p {p_name} -c {c_name} --tail={log_tail}"
+        print(f"\n실행 명령어: {cmd}\n")
         os.system(cmd)
+
 
 def watch_pod_monitoring_by_creation():
     """
-    4) Pod Monitoring (생성된 순서대로)
-       - watch -n1 "kubectl get po -A --sort-by=.status.startTime | tail -n <user_input>"
+    4) Pod Monitoring (생성된 순서)
+        watch -n1 "kubectl get po -A --sort-by=.metadata.creationTimestamp | tail -n <user_input>"
     """
-    tail_num = get_tail_lines()
-    cmd = f'watch -n1 "kubectl get po -A --sort-by=.status.startTime | tail -n {tail_num}"'
-    print(f"\nExecuting: {cmd}\n(Press Ctrl+C to stop)\n")
+    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
+    cmd = f'watch -n1 "kubectl get po -A --sort-by=.metadata.creationTimestamp | tail -n {tail_num}"'
+    print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
+
 
 def watch_non_running_pod():
     """
-    5) Pod Monitoring (Running이 아닌 Pod)
-       - grep -ivE ' Ready'
-       - Running 문자열이 " Ready" 형태로 들어가면 제외, NotReady 등은 표시됨
+    5) Pod Monitoring (Running이 아닌 Pod 확인)
+        grep -ivE 'Running' 를 통해 Running이 아닌 라인만 필터링 후 출력
     """
-    tail_num = get_tail_lines()
-    cmd = f'watch -n1 "kubectl get pods -A -o wide | grep -ivE \' Ready\' | tail -n {tail_num}"'
-    print(f"\nExecuting: {cmd}\n(Press Ctrl+C to stop)\n")
+    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
+    cmd = f"watch -n1 \"kubectl get pods -A -o wide | grep -ivE 'Running' | tail -n {tail_num}\""
+    print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
+
 
 def watch_pod_counts():
     """
-    6) Pod Monitoring - 전체/정상/비정상 Pod 개수
-       - 파이썬 루프
+    6) Pod Monitoring - 전체/정상(Running)/비정상 Pod 개수를 2초 간격으로 출력
+    Ctrl+C로 메뉴로 리턴
     """
-    print("\n(Press Ctrl+C to stop watching)")
+    print("\n(Ctrl+C로 중지 후 메뉴로 돌아갑니다.)")
     config.load_kube_config()
     v1 = client.CoreV1Api()
 
@@ -222,30 +231,31 @@ def watch_pod_counts():
 
             time.sleep(2)
     except KeyboardInterrupt:
-        print("\nReturning to menu...")
+        print("\n메뉴로 돌아갑니다...")
+
 
 def watch_unhealthy_nodes():
     """
     7) Node Monitoring (Unhealthy Node 확인)
-       - watch -n1 "kubectl get no ... | grep -ivE ' Ready' | tail -n <user_input>"
+        watch -n1 "kubectl get no ... | grep -ivE ' Ready' | tail -n <user_input>"
     """
-    tail_num = get_tail_lines()
+    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
     cmd = (
         'watch -n1 "'
         "kubectl get no "
-        '-L topology.ebs.csi.aws.com/zone -L node.kubernetes.io/instancegroup '
-        '--sort-by=.metadata.creationTimestamp '
-        '| grep -ivE \' Ready\' '
+        "-L topology.ebs.csi.aws.com/zone -L node.kubernetes.io/instancegroup "
+        "--sort-by=.metadata.creationTimestamp "
+        "| grep -ivE ' Ready' "
         f'| tail -n {tail_num}"'
     )
-    print(f"\nExecuting: {cmd}\n(Press Ctrl+C to stop)\n")
+    print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
+
 
 def watch_node_resources():
     """
     8) Node Monitoring (CPU/Memory 사용량 높은 순 정렬)
-       - 사용자에게 CPU 또는 Memory 선택 -> sort 컬럼 결정
-       - watch -n1 "kubectl top node | ...sort... | head -n ..."
+        사용자에게 CPU 또는 Memory를 정렬 기준으로 입력받은 뒤, kubectl top node 결과를 정렬하여 표시
     """
     while True:
         sort_key = input("정렬 기준을 선택하세요 (1: CPU, 2: Memory): ").strip()
@@ -268,20 +278,24 @@ def watch_node_resources():
 
     cmd = (
         f'watch -n1 "kubectl top node '
-        f'| sed 1d '
-        f'| sort -k{sort_column} -nr '
+        f"| sed 1d "
+        f"| sort -k{sort_column} -nr "
         f'| head -n {top_n}"'
     )
-    print(f"\nExecuting: {cmd}\n(Press Ctrl+C to stop)\n")
+    print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
 
+
 def main():
+    """
+    메인 함수 실행
+    """
     while True:
         choice = main_menu()
         if choice == "1":
             watch_event_monitoring()
         elif choice == "2":
-            error_pod_catch_once()    # watch 제거, 한 번만 Top 5
+            error_pod_catch_once()
         elif choice == "3":
             catch_error_logs()
         elif choice == "4":
@@ -298,8 +312,8 @@ def main():
             print("Exiting...")
             sys.exit(0)
         else:
-            print("Invalid choice. Please try again.")
+            print("잘못된 입력입니다. 메뉴에 표시된 숫자 또는 Q를 입력하세요.")
+
 
 if __name__ == "__main__":
     main()
-
