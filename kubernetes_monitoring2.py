@@ -307,7 +307,7 @@ def watch_node_resources():
     cmd = f"kubectl top node --no-headers"
     if filter_nodegroup:
         cmd += f" | grep {filter_nodegroup}"
-    cmd += f" | sort -k{sort_column} -nr | head -n {top_n}"
+    cmd += f" | sort -k{sort_column} -nr > 2>/dev/null | head -n {top_n}"
     cmd = f'watch -n1 "{cmd}"'
     print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
