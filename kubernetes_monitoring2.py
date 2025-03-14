@@ -11,7 +11,7 @@ def main_menu():
     메인 메뉴 출력
     """
     print("\n===== Kubernetes Monitoring Tool =====")
-    print("1) Event Monitoring")
+    print("1) Event Monitoring (Healthy, Unhealthy")
     print("2) Error Pod Catch (가장 최근에 재시작된 컨테이너 N개 확인)")
     print("3) Error Log Catch (가장 최근에 재시작된 컨테이너 N개 확인 후 이전 컨테이너의 로그 확인)")
     print("4) Pod Monitoring (생성된 순서) [옵션: Pod IP 및 Node Name 표시]")
@@ -23,18 +23,18 @@ def main_menu():
     print("Q) Quit")
     return input("Select an option: ").strip()
 
-
-def get_tail_lines(prompt="몇 줄씩 확인할까요? (예: 10): "):
+def get_tail_lines(prompt="몇 줄씩 확인할까요? (숫자 입력. default: 20줄): "):
     """
-    tail -n 에 사용할 숫자 입력
+    tail -n 에 사용할 숫자 입력 (기본값 20)
     """
     while True:
         val = input(prompt).strip()
+        if not val:  # 값이 없으면 기본값 20 반환
+            return "20"
         if val.isdigit():
             return val
         else:
             print("숫자로 입력해주세요.")
-
 
 def watch_event_monitoring():
     """
@@ -42,13 +42,13 @@ def watch_event_monitoring():
        사용자에게 전체 이벤트와 비정상(!=Normal) 이벤트 중 선택하도록 함.
     """
     print("\n[1] Event Monitoring")
-    event_choice = input("어떤 이벤트를 보시겠습니까? (1: 전체 이벤트, 2: 비정상 이벤트(Warning)): ").strip()
+    event_choice = input("어떤 이벤트를 보시겠습니까? (1: 전체 이벤트(default), 2: 비정상 이벤트(!=Normal)): ").strip()
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
     if event_choice == "2":
         # cmd = f'watch -n1 "kubectl get events -A --field-selector type=Warning --sort-by=\\".metadata.managedFields[].time\\" | tail -n {tail_num}"'
-        cmd = f'watch -n1 "kubectl get events -A --field-selector type!=Normal --sort-by=\\".metadata.managedFields[].time\\" | tail -n {tail_num}"'
+        cmd = f'watch -n2 "kubectl get events -A --field-selector type!=Normal --sort-by=\\".metadata.managedFields[].time\\" | tail -n {tail_num}"'
     else:
-        cmd = f'watch -n1 "kubectl get events -A --sort-by=\\".metadata.managedFields[].time\\" | tail -n {tail_num}"'
+        cmd = f'watch -n2 "kubectl get events -A --sort-by=\\".metadata.managedFields[].time\\" | tail -n {tail_num}"'
     print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
 
@@ -186,9 +186,9 @@ def watch_pod_monitoring_by_creation():
     extra = input("Pod IP 및 Node Name을 표시할까요? (yes/no): ").strip().lower()
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
     if extra.startswith("y"):
-        cmd = f'watch -n1 "kubectl get po -A -o wide --sort-by=.metadata.creationTimestamp | tail -n {tail_num}"'
+        cmd = f'watch -n2 "kubectl get po -A -o wide --sort-by=.metadata.creationTimestamp | tail -n {tail_num}"'
     else:
-        cmd = f'watch -n1 "kubectl get po -A --sort-by=.metadata.creationTimestamp | tail -n {tail_num}"'
+        cmd = f'watch -n2 "kubectl get po -A --sort-by=.metadata.creationTimestamp | tail -n {tail_num}"'
     print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
 
@@ -201,9 +201,9 @@ def watch_non_running_pod():
     extra = input("Pod IP 및 Node Name을 표시할까요? (yes/no): ").strip().lower()
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
     if extra.startswith("y"):
-        cmd = f'watch -n1 "kubectl get pods -A -o wide | grep -ivE \'Running\' | tail -n {tail_num}"'
+        cmd = f'watch -n2 "kubectl get pods -A -o wide | grep -ivE \'Running\' | tail -n {tail_num}"'
     else:
-        cmd = f'watch -n1 "kubectl get pods -A | grep -ivE \'Running\' | tail -n {tail_num}"'
+        cmd = f'watch -n2 "kubectl get pods -A | grep -ivE \'Running\' | tail -n {tail_num}"'
     print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
 
@@ -247,9 +247,9 @@ def watch_node_monitoring_by_creation():
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
     cmd_base = "kubectl get nodes -L topology.ebs.csi.aws.com/zone -L node.kubernetes.io/instancegroup --sort-by=.metadata.creationTimestamp"
     if filter_nodegroup:
-        cmd = f'watch -n1 "{cmd_base} | grep {filter_nodegroup} | tail -n {tail_num}"'
+        cmd = f'watch -n2 "{cmd_base} | grep {filter_nodegroup} | tail -n {tail_num}"'
     else:
-        cmd = f'watch -n1 "{cmd_base} | tail -n {tail_num}"'
+        cmd = f'watch -n2 "{cmd_base} | tail -n {tail_num}"'
     print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
 
@@ -267,9 +267,9 @@ def watch_unhealthy_nodes():
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
     cmd_base = "kubectl get nodes -L topology.ebs.csi.aws.com/zone -L node.kubernetes.io/instancegroup --sort-by=.metadata.creationTimestamp"
     if filter_nodegroup:
-        cmd = f'watch -n1 "{cmd_base} | grep -ivE \' Ready\' | grep {filter_nodegroup} | tail -n {tail_num}"'
+        cmd = f'watch -n2 "{cmd_base} | grep -ivE \' Ready\' | grep {filter_nodegroup} | tail -n {tail_num}"'
     else:
-        cmd = f'watch -n1 "{cmd_base} | grep -ivE \' Ready\' | tail -n {tail_num}"'
+        cmd = f'watch -n2 "{cmd_base} | grep -ivE \' Ready\' | tail -n {tail_num}"'
     print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
 
