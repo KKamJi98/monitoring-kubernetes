@@ -19,12 +19,15 @@ Kubernetes Monitoring Tool
 ## Requirements
 
 - Python 3.8 이상
-- Python Library (kubernetes, tabulate)
-- Kubernetes Client (kubectl)
+  - 가상환경(권장): pyenv, conda 또는 내장 venv 모듈을 사용하여 독립된 환경을 구성
+- Python Library  
+  - kubernetes  
+  - tabulate  
+- Kubernetes Client: kubectl
 
 ## Installation & Usage
 
-### 1. Git Clone & Python 실행행
+### 1. Git Clone & Python 실행
 
 1. **Repository Clone**
   
@@ -73,7 +76,13 @@ Kubernetes Monitoring Tool
 4. 경로 이동
 
    ```shell
-   sudo cp kubernetes_monitoring.py /usr/local/bin/kubernetes_monitoring
+   sudo cp kubernetes_monitoring.py /usr/local/bin/kubernetes_monitoring.py
+   ```
+
+5. 실행
+
+   ```shell
+   kubernetes_monitoring.py
    ```
 
 일반적으로 `/usr/local/bin`은 기본적으로 `PATH`에 포함되어 있습니다.  
@@ -89,14 +98,15 @@ export PATH=$PATH:/usr/local/bin
 
 ```shell
 ===== Kubernetes Monitoring Tool =====
-1) Event Monitoring
+1) Event Monitoring (Normal, !=Normal)
 2) Error Pod Catch (가장 최근에 재시작된 컨테이너 N개 확인)
 3) Error Log Catch (가장 최근에 재시작된 컨테이너 N개 확인 후 이전 컨테이너의 로그 확인)
-4) Pod Monitoring (생성된 순서)
-5) Pod Monitoring (Running이 아닌 Pod: grep -ivE 'Running')
+4) Pod Monitoring (생성된 순서) [옵션: Pod IP 및 Node Name 표시]
+5) Pod Monitoring (Running이 아닌 Pod 확인) [옵션: Pod IP 및 Node Name 표시]
 6) Pod Monitoring (전체/정상/비정상 Pod 개수 출력)
-7) Node Monitoring (Unhealthy Node 확인)
-8) Node Monitoring (CPU/Memory 사용량 높은 순 정렬)
+7) Node Monitoring (생성된 순서) [AZ, NodeGroup 표시 및 필터링 가능]
+8) Node Monitoring (Unhealthy Node 확인) [AZ, NodeGroup 표시 및 필터링 가능]
+9) Node Monitoring (CPU/Memory 사용량 높은 순 정렬) [NodeGroup 필터링 가능]
 Q) Quit
 ```
 
@@ -121,8 +131,13 @@ Q) Quit
 6. **Pod Monitoring (전체/정상/비정상 Pod 개수)**  
    - 2초 간격(`time.sleep(2)`)으로 전체 Pod 개수와 현재 Running 상태인지 아닌지 표시
 
-7. **Node Monitoring (Unhealthy Node 확인)**  
+7. Node Monitoring (생성된 순서)
+
+   - 노드의 생성 순서를 확인하며, 추가로 AZ 및 Node Group 정보를 표시
+   - 인덱스 기반으로 특정 Node Group을 선택하여 필터링 가능
+
+8. **Node Monitoring (Unhealthy Node 확인)**  
    - `kubectl get no` 결과에서 `grep -ivE ' Ready'`를 통해 Ready 상태가 아닌 노드만 필터링
 
-8. **Node Monitoring (CPU/Memory 사용량 높은 순 정렬)**  
+9. **Node Monitoring (CPU/Memory 사용량 높은 순 정렬)**  
    - `kubectl top node` 결과를 CPU나 메모리 사용량 기준으로 정렬한 뒤 상위 N개를 확인
