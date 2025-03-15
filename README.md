@@ -141,7 +141,7 @@ Q) Quit
 6. **Pod Monitoring (전체/정상/비정상 Pod 개수)**  
    - 2초 간격(`time.sleep(2)`)으로 전체 Pod 개수와 현재 Running 상태인지 아닌지 표시
 
-7. Node Monitoring (생성된 순서)
+7. **Node Monitoring (생성된 순서)**
 
    - 노드의 생성 순서를 확인하며, 추가로 AZ 및 Node Group 정보를 표시
    - 인덱스 기반으로 특정 Node Group을 선택하여 필터링 가능
