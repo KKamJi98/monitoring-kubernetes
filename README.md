@@ -86,10 +86,20 @@ Kubernetes Monitoring Tool
    ```
 
 일반적으로 `/usr/local/bin`은 기본적으로 `PATH`에 포함되어 있습니다.  
-만약 `PATH`에 `/usr/local/bin` 이 없다면, `~/.shellrc` 또는 `~/.zshrc`에 다음 문구를 추가해야 합니다.  
+만약 `PATH`에 `/usr/local/bin` 이 없다면, `~/bashrc` 또는 `~/.zshrc`에 다음 문구를 추가해야 합니다.  
 
 ```shell
 export PATH=$PATH:/usr/local/bin
+```
+
+짧은 명령어로 사용하기 위해서 `Alias`를 활용하는 것도 추천드립니다
+
+```shell
+alias kmp="kubernetes_monitoring.py"
+
+or
+
+alias kmp="python -u {PATH}/kubernetes_monitoring.py"
 ```
 
 ## Menu Description
