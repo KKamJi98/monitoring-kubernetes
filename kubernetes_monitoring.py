@@ -7,6 +7,9 @@ import datetime
 from kubernetes import client, config
 from tabulate import tabulate
 
+# 노드그룹 라벨을 변수로 분리 (기본값: node.kubernetes.io/app)
+NODE_GROUP_LABEL = "node.kubernetes.io/app"
+
 def load_kube_config():
     """kube config 로드 (예외처리 포함)"""
     try:
@@ -53,7 +56,7 @@ def choose_namespace():
 
 def choose_node_group():
     """
-    클러스터의 모든 노드 그룹 목록(라벨: node.kubernetes.io/app)을 표시하고,
+    클러스터의 모든 노드 그룹 목록(NODE_GROUP_LABEL로부터) 표시 후,
     사용자가 index로 선택하도록 함.
     아무 입력도 없으면 필터링하지 않음을 의미.
     """
@@ -67,8 +70,8 @@ def choose_node_group():
 
     node_groups = set()
     for node in nodes:
-        if node.metadata.labels and "node.kubernetes.io/app" in node.metadata.labels:
-            node_groups.add(node.metadata.labels["node.kubernetes.io/app"])
+        if node.metadata.labels and NODE_GROUP_LABEL in node.metadata.labels:
+            node_groups.add(node.metadata.labels[NODE_GROUP_LABEL])
     node_groups = list(node_groups)
     if not node_groups:
         print("노드 그룹이 존재하지 않습니다.")
@@ -297,9 +300,9 @@ def watch_node_monitoring_by_creation():
     else:
         filter_nodegroup = ""
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
-    # 라벨을 node.kubernetes.io/app 으로 수정
-    cmd_base = "kubectl get nodes -L topology.ebs.csi.aws.com/zone -L node.kubernetes.io/app --sort-by=.metadata.creationTimestamp"
+    cmd_base = f"kubectl get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
     if filter_nodegroup:
+        # filter_nodegroup은 해당 label 값과 일치하는 노드로만 필터
         cmd = f'watch -n2 "{cmd_base} | grep {filter_nodegroup} | tail -n {tail_num}"'
     else:
         cmd = f'watch -n2 "{cmd_base} | tail -n {tail_num}"'
@@ -318,7 +321,7 @@ def watch_unhealthy_nodes():
     else:
         filter_nodegroup = ""
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
-    cmd_base = "kubectl get nodes -L topology.ebs.csi.aws.com/zone -L node.kubernetes.io/app --sort-by=.metadata.creationTimestamp"
+    cmd_base = f"kubectl get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
     if filter_nodegroup:
         cmd = f'watch -n2 "{cmd_base} | grep -ivE \' Ready\' | grep {filter_nodegroup} | tail -n {tail_num}"'
     else:
@@ -330,18 +333,20 @@ def watch_node_resources():
     """
     9) Node Monitoring (CPU/Memory 사용량 높은 순 정렬)  
        특정 NodeGroup으로 필터링할 수 있도록 함.
+       NODE_GROUP_LABEL 변수 사용.
     """
     print("\n[9] Node Monitoring (CPU/Memory 사용량 높은 순 정렬)")
     while True:
         sort_key = input("정렬 기준을 선택하세요 (1: CPU, 2: Memory): ").strip()
         if sort_key == "1":
-            sort_column = 3
+            sort_column = 3  # CPU 열 인덱스
             break
         elif sort_key == "2":
-            sort_column = 5
+            sort_column = 5  # Memory 열 인덱스
             break
         else:
             print("잘못된 입력입니다. 다시 입력해주세요.")
+
     while True:
         val = input("상위 몇 개 노드를 볼까요? (예: 5): ").strip()
         if val.isdigit():
@@ -349,14 +354,20 @@ def watch_node_resources():
             break
         else:
             print("숫자로 입력해주세요.")
+
     filter_choice = input("특정 NodeGroup으로 필터링 하시겠습니까? (yes/no): ").strip().lower()
+    filter_nodegroup = ""
     if filter_choice.startswith("y"):
         filter_nodegroup = choose_node_group() or ""
-    else:
-        filter_nodegroup = ""
-    cmd = "kubectl top node --no-headers"
+
+    # NodeGroup 필터링 시, label selector를 사용하도록 변경 (grep 대신)
     if filter_nodegroup:
-        cmd += f" | grep {filter_nodegroup}"
+        # NODE_GROUP_LABEL=<filter_nodegroup> 형태로 필터링
+        cmd = f"kubectl top node -l {NODE_GROUP_LABEL}={filter_nodegroup} --no-headers"
+    else:
+        cmd = "kubectl top node --no-headers"
+
+    # sort -k3 or -k5 -nr로 정렬 후, head로 상위 N개만
     cmd += f" | sort -k{sort_column} -nr 2>/dev/null | head -n {top_n}"
     cmd = f'watch -n1 "{cmd}"'
     print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")

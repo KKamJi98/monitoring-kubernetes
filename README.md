@@ -4,107 +4,125 @@ Kubernetes Monitoring Tool
 
 ## Overview
 
-- **주요 기능**  
-  1. **Event Monitoring**  
-     Kubernetes 클러스터 전체 이벤트를 실시간으로 확인  
-  2. **Error Pod Catch**  
-     가장 최근에 재시작된 컨테이너 정보를 시간 기준으로 정렬하여 확인  
-  3. **Error Log Catch**  
-     재시작된 컨테이너의 이전 로그(-p 옵션)를 확인  
-  4. **Pod Monitoring**  
-     Pod 생성 순서, Running이 아닌 Pod, 전체/정상/비정상 Pod 개수를 조회  
-  5. **Node Monitoring**  
-     Unhealthy Node, CPU/Memory 사용량이 높은 Node 등을 확인
+이 스크립트는 Kubernetes 클러스터에서 이벤트, Pod, Node 상태 등을 빠르게 확인할 수 있는 모니터링 툴입니다.  
+메뉴 선택 방식으로 다양한 정보를 조회할 수 있습니다.
+
+### 주요 기능
+
+1. **Event Monitoring**  
+   - 전체 이벤트 혹은 정상(Normal)이 아닌 이벤트만 실시간(`watch`)으로 모니터링
+
+2. **Error Pod Catch**  
+   - 최근에 재시작된 컨테이너를 시간 기준으로 정렬하여 확인
+
+3. **Error Log Catch**  
+   - 재시작된 컨테이너 목록에서 특정 컨테이너의 이전 로그(-p 옵션) 확인
+
+4. **Pod Monitoring**  
+   - 생성된 순서, Running이 아닌 Pod, 전체/정상/비정상 Pod 개수를 조회
+
+5. **Node Monitoring**  
+   - 생성된 순서(노드 정보), Unhealthy Node, CPU/Memory 사용량이 높은 노드를 확인
+   - NodeGroup(라벨 기반)으로 필터링 가능
 
 ## Requirements
 
-- Python 3.8 이상
-  - 가상환경(권장): pyenv, conda 또는 내장 venv 모듈을 사용하여 독립된 환경을 구성
-- Python Library  
-  - kubernetes  
-  - tabulate  
-- Kubernetes Client: kubectl
+- **Python 3.8 이상**
+  - 가상환경(pyenv, conda 또는 venv)을 사용하면 충돌을 줄이고 독립된 환경을 유지할 수 있음
+- **필수 라이브러리**  
+  - [kubernetes](https://pypi.org/project/kubernetes/)  
+  - [tabulate](https://pypi.org/project/tabulate/)
+- **kubectl** (Kubernetes Client)
 
 ## Installation & Usage
 
 ### 1. Git Clone & Python 실행
 
 1. **Repository Clone**
-  
+
    ```shell
    git clone https://github.com/KKamJi98/monitoring-kubernetes.git
    cd monitoring-kubernetes
    ```
 
-2. **라이브러리 설치**  
+2. **라이브러리 설치**
 
    ```shell
    pip install kubernetes tabulate
    ```
-  
+
    - Python 3.8 버전 이상의 환경에서 실행을 권장합니다.
 
-3. **스크립트 실행**  
+3. **스크립트 실행**
 
    ```shell
    python kubernetes_monitoring.py
    ```
-  
-   - 메뉴가 표시되면 원하는 항목 번호(또는 Q)를 입력해 사용할 수 있습니다.
 
-### 2. 실행 파일로 등록하여 사용 (Option)
+   - 메뉴가 표시되면 원하는 항목 번호(또는 Q)를 입력하여 사용할 수 있습니다.
+
+### 2. 실행 파일로 등록하여 사용 (옵션)
 
 1. **Repository Clone**
-  
+
    ```shell
    git clone https://github.com/KKamJi98/monitoring-kubernetes.git
    cd monitoring-kubernetes
    ```
 
-2. **라이브러리 설치**  
+2. **라이브러리 설치**
 
    ```shell
    pip install kubernetes tabulate
    ```
 
-3. 실행 권한 부여
+3. **실행 권한 부여**
 
    ```shell
    chmod u+x kubernetes_monitoring.py
    ```
 
-4. 경로 이동
+4. **경로 이동**
 
    ```shell
    sudo cp kubernetes_monitoring.py /usr/local/bin/kubernetes_monitoring.py
    ```
 
-5. 실행
+5. **실행**
 
    ```shell
    kubernetes_monitoring.py
    ```
 
-일반적으로 `/usr/local/bin`은 기본적으로 `PATH`에 포함되어 있습니다.  
-만약 `PATH`에 `/usr/local/bin` 이 없다면, `~/bashrc` 또는 `~/.zshrc`에 다음 문구를 추가해야 합니다.  
+> 참고: 일반적으로 `/usr/local/bin`은 기본적으로 `PATH`에 포함됩니다.  
+> 만약 `PATH`에 `/usr/local/bin`이 없다면, `~/.bashrc` 또는 `~/.zshrc`에 다음을 추가해야 합니다.
 
 ```shell
 export PATH=$PATH:/usr/local/bin
 ```
 
-짧은 명령어로 사용하기 위해서 `Alias`를 활용하는 것도 추천드립니다
+#### 짧은 명령어로 사용하기 (Alias)
 
 ```shell
 alias kmp="kubernetes_monitoring.py"
 
 or
 
-alias kmp="python -u {PATH}/kubernetes_monitoring.py"
+alias kmp="python -u /usr/local/bin/kubernetes_monitoring.py"
+```
+
+## NodeGroup 라벨 커스터마이징
+
+- 스크립트 최상단에 있는 `NODE_GROUP_LABEL` 변수를 통해 NodeGroup 라벨 키를 쉽게 변경할 수 있습니다.
+- 기본값은 `"node.kubernetes.io/app"`로 설정되어 있으며, EKS 환경에서 NodeGroup 구분 시 흔히 사용하는 라벨입니다.  
+
+```python
+NODE_GROUP_LABEL = "node.kubernetes.io/app"
 ```
 
 ## Menu Description
 
-실행 시 아래와 같은 메뉴 출력
+스크립트 실행 시 아래와 같은 메뉴가 표시되며, 원하는 번호를 선택하여 기능을 사용할 수 있습니다.
 
 ```shell
 ===== Kubernetes Monitoring Tool =====
@@ -120,34 +138,45 @@ alias kmp="python -u {PATH}/kubernetes_monitoring.py"
 Q) Quit
 ```
 
-1. **Event Monitoring**  
-   - Kubernetes 이벤트를 실시간(`watch -n1`)으로 모니터링  
-   - 최신 이벤트부터 tail -n [사용자 지정]으로 확인  
+### 1. Event Monitoring
 
-2. **Error Pod Catch**  
-   - 최근 재시작된 컨테이너 정보를 N개까지 한번에 확인  
-   - 내림차순 정렬(`lastState.terminated.finishedAt` 기준)
+- 전체 이벤트 혹은 `type!=Normal` 이벤트를 실시간(`watch -n2`)으로 확인  
+- 최신 이벤트부터 tail -n [사용자 지정] 개수로 표시
 
-3. **Error Log Catch**  
-   - 최근 재시작된 컨테이너 N개를 표시한 뒤, 특정 컨테이너를 선택해 이전 로그(-p 옵션)를 tail -n [사용자 지정]으로 확인  
+### 2. Error Pod Catch
 
-4. **Pod Monitoring (생성된 순서)**  
-   - 클러스터 내 Pod를 생성 시간 기준으로 나열.  
-   - tail -n [사용자 지정] 설정 가능.
+- 최근 재시작된 컨테이너의 종료 시점(`lastState.terminated.finishedAt`) 기준으로 내림차순 정렬  
+- 한 번에 원하는 개수만큼 표시
 
-5. **Pod Monitoring (Running이 아닌 Pod 확인)**  
-   - `kubectl get pods` 결과에서 `grep -ivE 'Running'`를 통해 Running이 아닌 Pod만 필터링.
+### 3. Error Log Catch
 
-6. **Pod Monitoring (전체/정상/비정상 Pod 개수)**  
-   - 2초 간격(`time.sleep(2)`)으로 전체 Pod 개수와 현재 Running 상태인지 아닌지 표시
+- 재시작된 컨테이너 목록에서 특정 컨테이너를 선택해 이전 로그(`kubectl logs -p`)를 확인  
+- tail -n [사용자 지정] 개수만큼 로그를 볼 수 있음
 
-7. **Node Monitoring (생성된 순서)**
+### 4. Pod Monitoring (생성된 순서)
 
-   - 노드의 생성 순서를 확인하며, 추가로 AZ 및 Node Group 정보를 표시
-   - 인덱스 기반으로 특정 Node Group을 선택하여 필터링 가능
+- Pod 생성 시간(`.metadata.creationTimestamp`) 기준 정렬  
+- tail -n [사용자 지정] 개수 표시
 
-8. **Node Monitoring (Unhealthy Node 확인)**  
-   - `kubectl get no` 결과에서 `grep -ivE ' Ready'`를 통해 Ready 상태가 아닌 노드만 필터링
+### 5. Pod Monitoring (Running이 아닌 Pod 확인)
 
-9. **Node Monitoring (CPU/Memory 사용량 높은 순 정렬)**  
-   - `kubectl top node` 결과를 CPU나 메모리 사용량 기준으로 정렬한 뒤 상위 N개를 확인
+- `kubectl get pods` 결과에서 `grep -ivE 'Running'` 조건으로 Running이 아닌 Pod만 필터링  
+- Pod IP 및 Node Name 확인 옵션
+
+### 6. Pod Monitoring (전체/정상/비정상 Pod 개수)
+
+- 2초 간격으로 전체 Pod 개수, Running 상태인 Pod 개수, 비정상인 Pod 개수를 표시
+
+### 7. Node Monitoring (생성된 순서)
+
+- 노드의 생성 시간(`.metadata.creationTimestamp`) 기준 정렬  
+- Zone(`topology.ebs.csi.aws.com/zone`)와 NodeGroup(`NODE_GROUP_LABEL`)을 표시 및 필터링 가능
+
+### 8. Node Monitoring (Unhealthy Node 확인)
+
+- `kubectl get nodes` 결과에서 `grep -ivE ' Ready'`로 Ready가 아닌 노드만 필터링
+
+### 9. Node Monitoring (CPU/Memory 사용량 높은 순 정렬)
+
+- `kubectl top node` 결과에서 CPU나 메모리 기준으로 정렬 후 상위 N개 표시  
+- NodeGroup 라벨 기반 필터링 가능 (`-l node.kubernetes.io/app=<값>`)
