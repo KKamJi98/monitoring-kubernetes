@@ -172,7 +172,7 @@ def error_pod_catch_once():
 def catch_error_logs():
     """
     3) Error Log Catch  
-       최근 재시작된 컨테이너 목록에서 선택하여 이전 컨테이너의 로그 확인
+       최근 재시작된 컨테이너 목록에서 선택하여 이전 컨테이너의 로그 확인 후, 바로 메인 메뉴로 돌아감
     """
     print("\n[3] Error Log Catch (가장 최근에 재시작된 컨테이너 목록에서 선택)")
     load_kube_config()
@@ -211,25 +211,22 @@ def catch_error_logs():
     print(f"\n=== 최근 재시작된 컨테이너 목록 (시간 기준, Top {line_count}) ===\n")
     print(tabulate(table, headers=["INDEX", "Namespace", "Pod", "Container", "LastTerminatedTime"], tablefmt="github"))
 
-    while True:
-        sel = input("\n로그를 볼 INDEX를 입력 (Q: 종료): ").strip()
-        if sel.upper() == "Q":
-            return
-        if not sel.isdigit():
-            print("숫자를 입력하거나 Q를 입력해 종료하세요.")
-            continue
-        idx = int(sel)
-        if idx < 1 or idx > len(displayed_containers):
-            print("인덱스 범위를 벗어났습니다.")
-            continue
-        ns_pod, p_name, c_name, _ = displayed_containers[idx - 1]
-        log_tail = input("몇 줄의 로그를 확인할까요? (숫자 입력, 미입력 시 50줄): ").strip()
-        if not log_tail.isdigit():
-            print("입력하신 값이 숫자가 아닙니다. 50줄을 출력합니다.")
-            log_tail = "50"
-        cmd = f"kubectl logs -n {ns_pod} -p {p_name} -c {c_name} --tail={log_tail}"
-        print(f"\n실행 명령어: {cmd}\n")
-        os.system(cmd)
+    sel = input("\n로그를 볼 INDEX를 입력 (숫자 입력, Q: 종료): ").strip()
+    if sel.upper() == "Q" or not sel.isdigit():
+        return
+    idx = int(sel)
+    if idx < 1 or idx > len(displayed_containers):
+        print("인덱스 범위를 벗어났습니다.")
+        return
+    ns_pod, p_name, c_name, _ = displayed_containers[idx - 1]
+    log_tail = input("몇 줄의 로그를 확인할까요? (숫자 입력, 미입력 시 50줄): ").strip()
+    if not log_tail.isdigit():
+        print("입력하신 값이 숫자가 아닙니다. 50줄을 출력합니다.")
+        log_tail = "50"
+    cmd = f"kubectl logs -n {ns_pod} -p {p_name} -c {c_name} --tail={log_tail}"
+    print(f"\n실행 명령어: {cmd}\n")
+    os.system(cmd)
+
 
 def watch_pod_monitoring_by_creation():
     """
