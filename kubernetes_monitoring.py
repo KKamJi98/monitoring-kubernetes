@@ -20,8 +20,8 @@ def load_kube_config():
 
 def choose_namespace():
     """
-    클러스터의 모든 namespace 목록을 표시하고, 사용자가 index로 선택하도록 함.
-    아무 입력도 없으면 전체(namespace 전체) 조회를 의미.
+    클러스터의 모든 namespace 목록을 표시하고, 사용자가 index로 선택
+    아무 입력도 없으면 전체(namespace 전체) 조회
     """
     load_kube_config()
     v1 = client.CoreV1Api()
@@ -56,9 +56,8 @@ def choose_namespace():
 
 def choose_node_group():
     """
-    클러스터의 모든 노드 그룹 목록(NODE_GROUP_LABEL로부터) 표시 후,
-    사용자가 index로 선택하도록 함.
-    아무 입력도 없으면 필터링하지 않음을 의미.
+    클러스터의 모든 노드 그룹 목록(NODE_GROUP_LABEL로부터) 표시 후, 사용자가 index로 선택
+    아무 입력도 없으면 필터링하지 않음
     """
     load_kube_config()
     v1 = client.CoreV1Api()
@@ -113,12 +112,12 @@ def get_tail_lines(prompt="몇 줄씩 확인할까요? (숫자 입력. default: 
 def watch_event_monitoring():
     """
     1) Event Monitoring  
-       전체 이벤트 또는 비정상 이벤트(!=Normal)를 확인.
+       전체 이벤트 또는 비정상 이벤트(!=Normal)를 확인
     """
     print("\n[1] Event Monitoring")
     ns = choose_namespace()
     event_choice = input("어떤 이벤트를 보시겠습니까? (1: 전체 이벤트(default), 2: 비정상 이벤트(!=Normal)): ").strip()
-    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
+    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
 
     ns_option = f"-n {ns}" if ns else "-A"
     if event_choice == "2":
@@ -157,7 +156,7 @@ def error_pod_catch_once():
                     finished_at = datetime.datetime.fromisoformat(finished_at.replace("Z", "+00:00"))
                 restarted_containers.append((ns_pod, p_name, c_status.name, finished_at))
     restarted_containers.sort(key=lambda x: x[3], reverse=True)
-    line_count = int(get_tail_lines("몇 개의 컨테이너를 표시할까요? (예: 10): "))
+    line_count = int(get_tail_lines("몇 개의 컨테이너를 표시할까요? (예: 20): "))
     selected_containers = restarted_containers[:line_count]
 
     if not selected_containers:
@@ -199,7 +198,7 @@ def catch_error_logs():
                     finished_at = datetime.datetime.fromisoformat(finished_at.replace("Z", "+00:00"))
                 restarted_containers.append((ns_pod, p_name, c_status.name, finished_at))
     restarted_containers.sort(key=lambda x: x[3], reverse=True)
-    line_count = int(get_tail_lines("몇 개의 컨테이너를 표시할까요? (예: 10): "))
+    line_count = int(get_tail_lines("몇 개의 컨테이너를 표시할까요? (예: 20): "))
     displayed_containers = restarted_containers[:line_count]
 
     if not displayed_containers:
@@ -239,7 +238,7 @@ def watch_pod_monitoring_by_creation():
     """
     ns = choose_namespace()
     extra = input("Pod IP 및 Node Name을 표시할까요? (yes/no): ").strip().lower()
-    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
+    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
     ns_option = f"-n {ns}" if ns else "-A"
     if extra.startswith("y"):
         cmd = f'watch -n2 "kubectl get po {ns_option} -o wide --sort-by=.metadata.creationTimestamp | tail -n {tail_num}"'
@@ -255,7 +254,7 @@ def watch_non_running_pod():
     """
     ns = choose_namespace()
     extra = input("Pod IP 및 Node Name을 표시할까요? (yes/no): ").strip().lower()
-    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
+    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
     ns_option = f"-n {ns}" if ns else "-A"
     if extra.startswith("y"):
         cmd = f'watch -n2 "kubectl get pods {ns_option} -o wide | grep -ivE \'Running\' | tail -n {tail_num}"'
@@ -291,7 +290,7 @@ def watch_pod_counts():
 def watch_node_monitoring_by_creation():
     """
     7) Node Monitoring (생성된 순서)  
-       AZ, NodeGroup 정보를 함께 표시하며, 사용자가 특정 NodeGroup으로 필터링할 수 있음.
+       AZ, NodeGroup 정보를 함께 표시하며, 사용자가 특정 NodeGroup으로 필터링 가능
     """
     print("\n[7] Node Monitoring (생성된 순서)")
     filter_choice = input("특정 NodeGroup으로 필터링 하시겠습니까? (yes/no): ").strip().lower()
@@ -299,7 +298,7 @@ def watch_node_monitoring_by_creation():
         filter_nodegroup = choose_node_group() or ""
     else:
         filter_nodegroup = ""
-    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
+    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
     cmd_base = f"kubectl get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
     if filter_nodegroup:
         # filter_nodegroup은 해당 label 값과 일치하는 노드로만 필터
@@ -320,7 +319,7 @@ def watch_unhealthy_nodes():
         filter_nodegroup = choose_node_group() or ""
     else:
         filter_nodegroup = ""
-    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 30): ")
+    tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
     cmd_base = f"kubectl get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
     if filter_nodegroup:
         cmd = f'watch -n2 "{cmd_base} | grep -ivE \' Ready\' | grep {filter_nodegroup} | tail -n {tail_num}"'
@@ -331,9 +330,8 @@ def watch_unhealthy_nodes():
 
 def watch_node_resources():
     """
-    9) Node Monitoring (CPU/Memory 사용량 높은 순 정렬)  
-       특정 NodeGroup으로 필터링할 수 있도록 함.
-       NODE_GROUP_LABEL 변수 사용.
+    9) Node Monitoring (CPU/Memory 사용량 높은 순 정렬) 특정 NodeGroup 기준으로 필터링 가능
+       NODE_GROUP_LABEL 변수 사용
     """
     print("\n[9] Node Monitoring (CPU/Memory 사용량 높은 순 정렬)")
     while True:
@@ -348,12 +346,13 @@ def watch_node_resources():
             print("잘못된 입력입니다. 다시 입력해주세요.")
 
     while True:
-        val = input("상위 몇 개 노드를 볼까요? (예: 5): ").strip()
-        if val.isdigit():
-            top_n = val
+        val = input("상위 몇 개 노드를 볼까요? (기본값 20): ").strip()
+        if not val or not val.isdigit():
+            top_n = 20  # 숫자가 아니면 20 적용
             break
         else:
-            print("숫자로 입력해주세요.")
+            top_n = val
+            break
 
     filter_choice = input("특정 NodeGroup으로 필터링 하시겠습니까? (yes/no): ").strip().lower()
     filter_nodegroup = ""
