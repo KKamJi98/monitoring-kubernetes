@@ -296,12 +296,21 @@ def watch_node_monitoring_by_creation():
     else:
         filter_nodegroup = ""
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
-    cmd_base = f"kubectl get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
+    
     if filter_nodegroup:
-        # filter_nodegroup은 해당 label 값과 일치하는 노드로만 필터
-        cmd = f'watch -n2 "{cmd_base} | grep {filter_nodegroup} | tail -n {tail_num}"'
+        # label selector를 사용해서 정확히 일치하는 노드만 필터링
+        cmd = (
+            f'watch -n2 "kubectl get nodes -l {NODE_GROUP_LABEL}={filter_nodegroup} '
+            f'-L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} '
+            f'--sort-by=.metadata.creationTimestamp | tail -n {tail_num}"'
+        )
     else:
+        cmd_base = (
+            f"kubectl get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} "
+            f"--sort-by=.metadata.creationTimestamp"
+        )
         cmd = f'watch -n2 "{cmd_base} | tail -n {tail_num}"'
+    
     print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
 
@@ -317,11 +326,15 @@ def watch_unhealthy_nodes():
     else:
         filter_nodegroup = ""
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
-    cmd_base = f"kubectl get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
+
+    # label selector를 사용해서 정확한 노드 그룹으로 필터링
     if filter_nodegroup:
-        cmd = f'watch -n2 "{cmd_base} | grep -ivE \' Ready\' | grep {filter_nodegroup} | tail -n {tail_num}"'
+        cmd_base = f"kubectl get nodes -l {NODE_GROUP_LABEL}={filter_nodegroup} -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
     else:
-        cmd = f'watch -n2 "{cmd_base} | grep -ivE \' Ready\' | tail -n {tail_num}"'
+        cmd_base = f"kubectl get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
+
+    # 'Ready' 상태가 아닌 노드들만 표시
+    cmd = f'watch -n2 "{cmd_base} | grep -ivE \' Ready\' | tail -n {tail_num}"'
     print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
 
