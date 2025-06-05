@@ -254,9 +254,9 @@ def watch_non_running_pod():
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
     ns_option = f"-n {ns}" if ns else "-A"
     if extra.startswith("y"):
-        cmd = f'watch -n2 "kubectl get pods {ns_option} -o wide | grep -ivE \'Running\' | tail -n {tail_num}"'
+        cmd = f'watch -n2 "kubectl get pods {ns_option} -o wide | grep -ivE \' Running\' | tail -n {tail_num}"'
     else:
-        cmd = f'watch -n2 "kubectl get pods {ns_option} | grep -ivE \'Running\' | tail -n {tail_num}"'
+        cmd = f'watch -n2 "kubectl get pods {ns_option} | grep -ivE \' Running\' | tail -n {tail_num}"'
     print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
 
@@ -334,7 +334,7 @@ def watch_unhealthy_nodes():
         cmd_base = f"kubectl get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
 
     # 'Ready' 상태가 아닌 노드들만 표시
-    cmd = f'watch -n2 "{cmd_base} | grep -ivE \' Ready\' | tail -n {tail_num}"'
+    cmd = f'watch -n2 "{cmd_base} | grep -ivE \' Ready \' | tail -n {tail_num}"'
     print(f"\n실행 명령어: {cmd}\n(Ctrl+C로 중지)\n")
     os.system(cmd)
 
