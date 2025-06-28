@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0](https://github.com/KKamJi98/monitoring-kubernetes/compare/v1.2.0...v1.3.0) (2025-06-28)
+
+
+### Features
+
+* Apply consistent styling to menu indices ([6c63964](https://github.com/KKamJi98/monitoring-kubernetes/commit/6c63964d9f0900e807b46c9cb65793d86fdef4eb))
+
 ## [1.2.0](https://github.com/KKamJi98/monitoring-kubernetes/compare/v1.1.0...v1.2.0) (2025-06-28)
 
 
