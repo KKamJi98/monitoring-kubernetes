@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0](https://github.com/KKamJi98/monitoring-kubernetes/compare/v1.1.0...v1.2.0) (2025-06-28)
+
+
+### Features
+
+* Apply rich library for enhanced main menu display ([4d821c0](https://github.com/KKamJi98/monitoring-kubernetes/commit/4d821c064accc1c09a08eb5b11cd5e4dc9bc1bf1))
+* Enhance main menu display ([76d2179](https://github.com/KKamJi98/monitoring-kubernetes/commit/76d2179c82e334ab84d7d472df1c8b01a733c4dc))
+
+
+### Bug Fixes
+
+* Ensure consistent rich styling for all main menu items ([7596ae2](https://github.com/KKamJi98/monitoring-kubernetes/commit/7596ae29685893c897266f9f4868f8fb310a9ee6))
+
+
+### Documentation
+
+* Update README.md UI and refactor menu title ([8c179b1](https://github.com/KKamJi98/monitoring-kubernetes/commit/8c179b13ce165658278f63d780db34427b773390))
+
 ## [1.1.0](https://github.com/KKamJi98/monitoring-kubernetes/compare/v1.0.1...v1.1.0) (2025-06-28)
 
 
