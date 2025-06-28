@@ -21,6 +21,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.style import Style
 from rich.table import Table
+from rich.markdown import Markdown
 
 console = Console()
 
@@ -497,6 +498,9 @@ def main_menu() -> str:
         box=box.ROUNDED,
         padding=(0, 1),
         highlight=True,
+        title="Kubernetes Monitoring Tool",
+        title_style="bold yellow",
+        title_justify="center",
     )
     menu_table.add_column("Option", style="bold green")
     menu_table.add_column("Description", style="white")
@@ -525,13 +529,7 @@ def main_menu() -> str:
 
     for option, description in menu_options:
         menu_table.add_row(option, description)
-
-    menu_panel = Panel(
-        menu_table,
-        title="[bold yellow]Kubernetes Monitoring Tool[/bold yellow]",
-        expand=False,
-    )
-    console.print(Padding(menu_panel, (1, 0, 1, 0)))
+    console.print(menu_table)
     return Prompt.ask("Select an option")
 
 

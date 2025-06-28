@@ -134,9 +134,9 @@ NODE_GROUP_LABEL = "node.kubernetes.io/app"
 │ │ 4 │ Pod Monitoring (생성된 순서) [옵션: Pod IP 및 Node Name 표시]                         │ │
 │ │ 5 │ Pod Monitoring (Running이 아닌 Pod) [옵션: Pod IP 및 Node Name 표시]                  │ │
 │ │ 6 │ Pod Monitoring (전체/정상/비정상 Pod 개수 출력)                                       │ │
-│ │ 7 │ Node Monitoring (생성된 순서) [AZ, NodeGroup 표시 및 필터링 가능]                     │ │
-│ │ 8 │ Node Monitoring (Unhealthy Node 확인) [AZ, NodeGroup 표시 및 필터링 가능]             │ │
-│ │ 9 │ Node Monitoring (CPU/Memory 사용량 높은 순 정렬) [NodeGroup 필터링 가능]              │ │
+│ │ 7 │ Node Monitoring (생성된 순서) [AZ, NodeGroup 표시 및 필터링 가능]                         │ │
+│ │ 8 │ Node Monitoring (Unhealthy Node 확인) [AZ, NodeGroup 표시 및 필터링 가능]                 │ │
+│ │ 9 │ Node Monitoring (CPU/Memory 사용량 높은 순 정렬) [NodeGroup 필터링 가능]                   │ │
 │ │ Q │ Quit                                                                                  │ │
 │ ╰───┴───────────────────────────────────────────────────────────────────────────────────────╯ │
 ╰───────────────────────────────────────────────────────────────────────────────────────────────╯
