@@ -49,7 +49,7 @@ Kubernetes 클러스터에서 이벤트, Pod, Node 상태 등을 빠르게 확�
 2. **라이브러리 설치**
 
    ```shell
-   pip install kubernetes tabulate
+   uv pip install kubernetes tabulate
    ```
 
    - Python 3.8 버전 이상의 환경에서 실행을 권장합니다.
@@ -74,7 +74,7 @@ Kubernetes 클러스터에서 이벤트, Pod, Node 상태 등을 빠르게 확�
 2. **라이브러리 설치**
 
    ```shell
-   pip install kubernetes tabulate
+   uv pip install kubernetes tabulate
    ```
 
 3. **실행 권한 부여**
