@@ -17,6 +17,7 @@ except ImportError:
 from rich import box
 from rich.console import Console
 from rich.padding import Padding
+from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.style import Style
 from rich.table import Table
@@ -491,7 +492,6 @@ def main_menu() -> str:
     """
     메인 메뉴 출력
     """
-    console.print("\n[bold yellow]===== Kubernetes Monitoring Tool =====[/bold yellow]")
     menu_table = Table(
         show_header=False,
         box=box.ROUNDED,
@@ -526,7 +526,12 @@ def main_menu() -> str:
     for option, description in menu_options:
         menu_table.add_row(option, description)
 
-    console.print(Padding(menu_table, (1, 0, 1, 0)))
+    menu_panel = Panel(
+        menu_table,
+        title="[bold yellow]===== Kubernetes Monitoring Tool =====[/bold yellow]",
+        expand=False,
+    )
+    console.print(Padding(menu_panel, (1, 0, 1, 0)))
     return Prompt.ask("Select an option")
 
 
