@@ -56,7 +56,7 @@ def choose_namespace() -> Optional[str]:
         return None
 
     table = Table(show_header=True, header_style="bold magenta", box=box.ROUNDED)
-    table.add_column("Index", style="dim", width=5)
+    table.add_column("Index", style="bold green", width=5)
     table.add_column("Namespace")
     for idx, ns in enumerate(ns_list, start=1):
         table.add_row(str(idx), ns.metadata.name)
@@ -103,7 +103,7 @@ def choose_node_group() -> Optional[str]:
 
     node_groups.sort()
     table = Table(show_header=True, header_style="bold magenta", box=box.ROUNDED)
-    table.add_column("Index", style="dim", width=5)
+    table.add_column("Index", style="bold green", width=5)
     table.add_column("Node Group")
     for idx, ng in enumerate(node_groups, start=1):
         table.add_row(str(idx), ng)
@@ -502,7 +502,7 @@ def main_menu() -> str:
         title_style="bold yellow",
         title_justify="center",
     )
-    menu_table.add_column("Option", style="bold green")
+    menu_table.add_column("Option")
     menu_table.add_column("Description", style="white")
 
     menu_options = [
@@ -528,7 +528,10 @@ def main_menu() -> str:
     ]
 
     for option, description in menu_options:
-        menu_table.add_row(option, description)
+        if option == "Q":
+            menu_table.add_row(f"[bold yellow]{option}[/bold yellow]", description)
+        else:
+            menu_table.add_row(f"[bold green]{option}[/bold green]", description)
     console.print(menu_table)
     return Prompt.ask("Select an option")
 
