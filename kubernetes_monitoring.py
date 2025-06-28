@@ -497,7 +497,6 @@ def main_menu() -> str:
         box=box.ROUNDED,
         padding=(0, 1),
         highlight=True,
-        row_styles=["none", "dim"],
     )
     menu_table.add_column("Option", style="bold green")
     menu_table.add_column("Description", style="white")
