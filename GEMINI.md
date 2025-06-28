@@ -4,7 +4,7 @@ Kubernetes 클러스터의 리소스(Pod, Node 등)를 모니터링하고, 현�
 
 ## Rules
 
-- **커밋:** Conventional Commits 사양을 따르며, `googleapis/release-please-action@v4`에 맞춰 커밋 메시지를 작성합니다.
+- **커밋:** Conventional Commits 사양을 따르며, `googleapis/release-please-action@v4`에 맞춰 커밋 메시지를 영어로 작성합니다.
 - **버전 관리:** 시맨틱 버전 관리(vX.X.X)를 사용합니다.
 - **포맷팅:** 코드는 `black`과 `isort`로 포맷팅합니다.
 - **코드 품질:** `black`, `isort`, `pytest`를 모두 통과한 상태에서만 GitHub에 커밋 및 푸시합니다.

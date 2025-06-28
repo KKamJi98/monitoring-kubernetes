@@ -528,7 +528,7 @@ def main_menu() -> str:
 
     menu_panel = Panel(
         menu_table,
-        title="[bold yellow]===== Kubernetes Monitoring Tool =====[/bold yellow]",
+        title="[bold yellow]Kubernetes Monitoring Tool[/bold yellow]",
         expand=False,
     )
     console.print(Padding(menu_panel, (1, 0, 1, 0)))
