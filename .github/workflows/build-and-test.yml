@@ -21,8 +21,8 @@ jobs:
         run: pip install uv
       - name: Create virtual environment
         run: uv venv
-      - name: Activate virtual environment
-        run: source .venv/bin/activate
+      - name: Add virtual environment to PATH
+        run: echo "::$HOME/work/monitoring-kubernetes/.venv/bin" | tee -a $GITHUB_PATH
       - name: Install dependencies
         run: uv pip install .
       - name: Install dev dependencies
