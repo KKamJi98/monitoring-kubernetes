@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0](https://github.com/KKamJi98/monitoring-kubernetes/compare/v1.2.0...v1.3.0) (2025-07-04)
+
+
+### Refactor
+
+* Combine 'Error Pod Catch' and 'Error Log Catch' features into a single, streamlined function.
+
+
+### Documentation
+
+* Update README.md to reflect the combined functionality and re-ordered menu.
+
 ## [1.2.0](https://github.com/KKamJi98/monitoring-kubernetes/compare/v1.1.0...v1.2.0) (2025-06-28)
 
 

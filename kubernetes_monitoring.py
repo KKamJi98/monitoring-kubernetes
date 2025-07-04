@@ -177,63 +177,12 @@ def watch_event_monitoring() -> None:
     os.system(cmd)
 
 
-def error_pod_catch_once() -> None:
+def view_restarted_container_logs() -> None:
     """
-    2) Error Pod Catch
-       가장 최근에 재시작된 컨테이너 Top N (한 번만 표시)
+    2) 재시작된 컨테이너 확인 및 로그 조회
+       최근 재시작된 컨테이너 목록에서 선택하여 이전 컨테이너의 로그 확인
     """
-    print("\n[2] 가장 최근에 재시작된 컨테이너 Top N (시간 기준, 한 번만 표시)")
-    load_kube_config()
-    v1 = client.CoreV1Api()
-    ns = choose_namespace()
-    pods = get_pods(v1, ns)
-    if not pods:
-        return
-
-    restarted_containers = []
-    for pod in pods:
-        ns_pod = pod.metadata.namespace
-        p_name = pod.metadata.name
-        if not pod.status.container_statuses:
-            continue
-        for c_status in pod.status.container_statuses:
-            term = c_status.last_state.terminated
-            if term and term.finished_at:
-                finished_at = term.finished_at
-                if isinstance(finished_at, str):
-                    finished_at = datetime.datetime.fromisoformat(
-                        finished_at.replace("Z", "+00:00")
-                    )
-                restarted_containers.append(
-                    (ns_pod, p_name, c_status.name, finished_at)
-                )
-    restarted_containers.sort(key=lambda x: x[3], reverse=True)
-    line_count = int(get_tail_lines("몇 개의 컨테이너를 표시할까요? (예: 20): "))
-    selected_containers = restarted_containers[:line_count]
-
-    if not selected_containers:
-        print("재시작된 컨테이너가 없습니다.")
-        return
-
-    table = Table(show_header=True, header_style="bold magenta", box=box.ROUNDED)
-    table.add_column("Namespace")
-    table.add_column("Pod")
-    table.add_column("Container")
-    table.add_column("LastTerminatedTime")
-    for ns_pod, podname, cname, fat in selected_containers:
-        table.add_row(ns_pod, podname, cname, fat.strftime("%Y-%m-%d %H:%M:%S"))
-    console.print(
-        f"\n=== 최근 재시작된 컨테이너 Top {line_count} ===\n", style="bold green"
-    )
-    console.print(table)
-
-
-def catch_error_logs() -> None:
-    """
-    3) Error Log Catch
-       최근 재시작된 컨테이너 목록에서 선택하여 이전 컨테이너의 로그 확인 후, 바로 메인 메뉴로 돌아감
-    """
-    print("\n[3] Error Log Catch (가장 최근에 재시작된 컨테이너 목록에서 선택)")
+    console.print("\n[2] 재시작된 컨테이너 확인 및 로그 조회", style="bold blue")
     load_kube_config()
     v1 = client.CoreV1Api()
     ns = choose_namespace()
@@ -303,10 +252,10 @@ def catch_error_logs() -> None:
 
 def watch_pod_monitoring_by_creation() -> None:
     """
-    4) Pod Monitoring (생성된 순서)
+    3) Pod Monitoring (생성된 순서)
        Pod IP 및 Node Name을 선택적으로 표시하며, namespace 지정 가능
     """
-    console.print("[4] Pod Monitoring (생성된 순서)", style="bold blue")
+    console.print("\n[3] Pod Monitoring (생성된 순서)", style="bold blue")
     ns = choose_namespace()
     extra = (
         Prompt.ask("Pod IP 및 Node Name을 표시할까요? (yes/no)", default="no")
@@ -327,10 +276,10 @@ def watch_pod_monitoring_by_creation() -> None:
 
 def watch_non_running_pod() -> None:
     """
-    5) Pod Monitoring (Running이 아닌 Pod)
+    4) Pod Monitoring (Running이 아닌 Pod)
        Pod IP 및 Node Name을 선택적으로 표시하며, namespace 지정 가능
     """
-    console.print("\n[5] Pod Monitoring (Running이 아닌 Pod)", style="bold blue")
+    console.print("\n[4] Pod Monitoring (Running이 아닌 Pod)", style="bold blue")
     ns = choose_namespace()
     extra = (
         Prompt.ask("Pod IP 및 Node Name을 표시할까요? (yes/no)", default="no")
@@ -351,9 +300,10 @@ def watch_non_running_pod() -> None:
 
 def watch_pod_counts() -> None:
     """
-    6) Pod Monitoring - 전체/정상/비정상 Pod 개수 출력 (2초 간격)
+    5) Pod Monitoring - 전체/정상/비정상 Pod 개수 출력 (2초 간격)
        namespace 지정 가능
     """
+    console.print("\n[5] Pod Monitoring (전체/정상/비정상 Pod 개수 출력)", style="bold blue")
     ns = choose_namespace()
     console.print("\n(Ctrl+C로 중지 후 메뉴로 돌아갑니다.)", style="bold yellow")
     load_kube_config()
@@ -376,10 +326,10 @@ def watch_pod_counts() -> None:
 
 def watch_node_monitoring_by_creation() -> None:
     """
-    7) Node Monitoring (생성된 순서)
+    6) Node Monitoring (생성된 순서)
        AZ, NodeGroup 정보를 함께 표시하며, 사용자가 특정 NodeGroup으로 필터링 가능
     """
-    console.print("\n[7] Node Monitoring (생성된 순서)", style="bold blue")
+    console.print("\n[6] Node Monitoring (생성된 순서)", style="bold blue")
     filter_choice = (
         Prompt.ask("특정 NodeGroup으로 필터링 하시겠습니까? (yes/no)", default="no")
         .strip()
@@ -413,10 +363,10 @@ def watch_node_monitoring_by_creation() -> None:
 
 def watch_unhealthy_nodes() -> None:
     """
-    8) Node Monitoring (Unhealthy Node 확인)
+    7) Node Monitoring (Unhealthy Node 확인)
        AZ, NodeGroup 정보를 함께 표시하며, 특정 NodeGroup 필터링 가능
     """
-    console.print("[8] Node Monitoring (Unhealthy Node 확인)", style="bold blue")
+    console.print("\n[7] Node Monitoring (Unhealthy Node 확인)", style="bold blue")
     filter_choice = (
         Prompt.ask("특정 NodeGroup으로 필터링 하시겠습니까? (yes/no)", default="no")
         .strip()
@@ -442,11 +392,11 @@ def watch_unhealthy_nodes() -> None:
 
 def watch_node_resources() -> None:
     """
-    9) Node Monitoring (CPU/Memory 사용량 높은 순 정렬) 특정 NodeGroup 기준으로 필터링 가능
+    8) Node Monitoring (CPU/Memory 사용량 높은 순 정렬) 특정 NodeGroup 기준으로 필터링 가능
        NODE_GROUP_LABEL 변수 사용
     """
     console.print(
-        "\n[9] Node Monitoring (CPU/Memory 사용량 높은 순 정렬)", style="bold blue"
+        "\n[8] Node Monitoring (CPU/Memory 사용량 높은 순 정렬)", style="bold blue"
     )
     while True:
         sort_key = Prompt.ask(
@@ -507,21 +457,17 @@ def main_menu() -> str:
 
     menu_options = [
         ("1", "Event Monitoring (Normal, !=Normal)"),
-        ("2", "Error Pod Catch (가장 최근에 재시작된 컨테이너 N개 확인)"),
+        ("2", "재시작된 컨테이너 확인 및 로그 조회"),
+        ("3", "Pod Monitoring (생성된 순서) [옵션: Pod IP 및 Node Name 표시]"),
+        ("4", "Pod Monitoring (Running이 아닌 Pod) [옵션: Pod IP 및 Node Name 표시]"),
+        ("5", "Pod Monitoring (전체/정상/비정상 Pod 개수 출력)"),
+        ("6", "Node Monitoring (생성된 순서) [AZ, NodeGroup 표시 및 필터링 가능]"),
         (
-            "3",
-            "Error Log Catch (가장 최근에 재시작된 컨테이너 N개 확인 후 이전 컨테이너의 로그 확인)",
-        ),
-        ("4", "Pod Monitoring (생성된 순서) [옵션: Pod IP 및 Node Name 표시]"),
-        ("5", "Pod Monitoring (Running이 아닌 Pod) [옵션: Pod IP 및 Node Name 표시]"),
-        ("6", "Pod Monitoring (전체/정상/비정상 Pod 개수 출력)"),
-        ("7", "Node Monitoring (생성된 순서) [AZ, NodeGroup 표시 및 필터링 가능]"),
-        (
-            "8",
+            "7",
             "Node Monitoring (Unhealthy Node 확인) [AZ, NodeGroup 표시 및 필터링 가능]",
         ),
         (
-            "9",
+            "8",
             "Node Monitoring (CPU/Memory 사용량 높은 순 정렬) [NodeGroup 필터링 가능]",
         ),
         ("Q", "Quit"),
@@ -545,20 +491,18 @@ def main() -> None:
         if choice == "1":
             watch_event_monitoring()
         elif choice == "2":
-            error_pod_catch_once()
+            view_restarted_container_logs()
         elif choice == "3":
-            catch_error_logs()
-        elif choice == "4":
             watch_pod_monitoring_by_creation()
-        elif choice == "5":
+        elif choice == "4":
             watch_non_running_pod()
-        elif choice == "6":
+        elif choice == "5":
             watch_pod_counts()
-        elif choice == "7":
+        elif choice == "6":
             watch_node_monitoring_by_creation()
-        elif choice == "8":
+        elif choice == "7":
             watch_unhealthy_nodes()
-        elif choice == "9":
+        elif choice == "8":
             watch_node_resources()
         elif choice.upper() == "Q":
             print("Exiting...")
