@@ -22,11 +22,15 @@ jobs:
       - name: Create virtual environment
         run: uv venv
       - name: Add virtual environment to PATH
-        run: echo "::$HOME/work/monitoring-kubernetes/.venv/bin" | tee -a $GITHUB_PATH
+        run: echo "$HOME/work/monitoring-kubernetes/.venv/bin" >> $GITHUB_PATH
+      - name: Debug PATH after adding venv
+        run: echo "PATH is: $PATH"
       - name: Install dependencies
         run: uv pip install .
       - name: Install dev dependencies
         run: uv pip install ".[dev]"
+      - name: List .venv/bin contents
+        run: ls -l $HOME/work/monitoring-kubernetes/.venv/bin
       - name: Run Black
         run: black . --check
       - name: Run Ruff
