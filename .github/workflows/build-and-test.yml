@@ -19,26 +19,28 @@ jobs:
           python-version: '3.x'
       - name: Install uv
         run: pip install uv
-      - name: Create virtual environment
-        run: uv venv
-      - name: Add virtual environment to PATH
-        run: echo "$HOME/work/monitoring-kubernetes/.venv/bin" >> $GITHUB_PATH
-      - name: Debug PATH after adding venv
-        run: echo "PATH is: $PATH"
-      - name: Install dependencies
-        run: uv pip install .
-      - name: Install dev dependencies
-        run: uv pip install ".[dev]"
-      - name: List .venv/bin contents
-        run: ls -l $HOME/work/monitoring-kubernetes/.venv/bin
+      - name: Create virtual environment and install dependencies
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv pip install .
+          uv pip install ".[dev]"
       - name: Run Black
-        run: black . --check
+        run: |
+          source .venv/bin/activate
+          black . --check
       - name: Run Ruff
-        run: ruff check . --fix --exit-non-zero-on-fix
+        run: |
+          source .venv/bin/activate
+          ruff check . --fix --exit-non-zero-on-fix
       - name: Run MyPy
-        run: mypy .
+        run: |
+          source .venv/bin/activate
+          mypy .
       - name: Run tests with Pytest and Pytest-Cov
-        run: pytest --cov=./ --cov-report=xml
+        run: |
+          source .venv/bin/activate
+          pytest --cov=./ --cov-report=xml
 
   release-please:
     needs: build-and-test

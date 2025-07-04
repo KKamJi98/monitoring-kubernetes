@@ -8,7 +8,7 @@ from typing import List, Optional
 
 try:
     from kubernetes import client, config
-    from kubernetes.client import CoreV1Api, V1Pod, V1NamespaceList, V1PodList
+    from kubernetes.client import CoreV1Api, V1NamespaceList, V1Pod
 except ImportError:
     client = None  # type: ignore
     config = None  # type: ignore
