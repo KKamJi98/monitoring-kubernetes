@@ -8,7 +8,7 @@ from typing import List, Optional
 
 try:
     from kubernetes import client, config
-    from kubernetes.client import CoreV1Api, V1Pod
+    from kubernetes.client import CoreV1Api, V1Pod, V1NamespaceList, V1PodList
 except ImportError:
     client = None  # type: ignore
     config = None  # type: ignore
@@ -16,12 +16,8 @@ except ImportError:
     V1Pod = None  # type: ignore
 from rich import box
 from rich.console import Console
-from rich.padding import Padding
-from rich.panel import Panel
 from rich.prompt import Prompt
-from rich.style import Style
 from rich.table import Table
-from rich.markdown import Markdown
 
 console = Console()
 
@@ -46,19 +42,20 @@ def choose_namespace() -> Optional[str]:
     load_kube_config()
     v1 = client.CoreV1Api()
     try:
-        ns_list = v1.list_namespace().items
+        ns_list: V1NamespaceList = v1.list_namespace()
+        items = ns_list.items
     except Exception as e:
         print(f"Error fetching namespaces: {e}")
         return None
 
-    if not ns_list:
+    if not items:
         print("Namespace가 존재하지 않습니다.")
         return None
 
     table = Table(show_header=True, header_style="bold magenta", box=box.ROUNDED)
     table.add_column("Index", style="bold green", width=5)
     table.add_column("Namespace")
-    for idx, ns in enumerate(ns_list, start=1):
+    for idx, ns in enumerate(items, start=1):
         table.add_row(str(idx), ns.metadata.name)
     console.print("\n=== Available Namespaces ===", style="bold green")
     console.print(table)
@@ -72,10 +69,10 @@ def choose_namespace() -> Optional[str]:
         print("숫자로 입력해주세요. 전체 조회로 진행합니다.")
         return None
     index = int(selection)
-    if index < 1 or index > len(ns_list):
+    if index < 1 or index > len(items):
         print("유효하지 않은 번호입니다. 전체 조회로 진행합니다.")
         return None
-    chosen_ns = ns_list[index - 1].metadata.name
+    chosen_ns = str(items[index - 1].metadata.name)
     return chosen_ns
 
 
@@ -92,16 +89,15 @@ def choose_node_group() -> Optional[str]:
         print(f"Error fetching nodes: {e}")
         return None
 
-    node_groups = set()
+    node_groups: List[str] = []
+    temp_node_groups = set()
     for node in nodes:
         if node.metadata.labels and NODE_GROUP_LABEL in node.metadata.labels:
-            node_groups.add(node.metadata.labels[NODE_GROUP_LABEL])
-    node_groups = list(node_groups)
+            temp_node_groups.add(node.metadata.labels[NODE_GROUP_LABEL])
+    node_groups = sorted(list(temp_node_groups))
     if not node_groups:
         print("노드 그룹이 존재하지 않습니다.")
         return None
-
-    node_groups.sort()
     table = Table(show_header=True, header_style="bold magenta", box=box.ROUNDED)
     table.add_column("Index", style="bold green", width=5)
     table.add_column("Node Group")
@@ -144,10 +140,9 @@ def get_pods(v1_api: CoreV1Api, namespace: Optional[str] = None) -> List[V1Pod]:
     """
     try:
         if namespace:
-            pods = v1_api.list_namespaced_pod(namespace=namespace).items
+            return list(v1_api.list_namespaced_pod(namespace=namespace).items)
         else:
-            pods = v1_api.list_pod_for_all_namespaces().items
-        return pods
+            return list(v1_api.list_pod_for_all_namespaces().items)
     except Exception as e:
         print(f"Error fetching pods: {e}")
         return []
@@ -216,7 +211,7 @@ def view_restarted_container_logs() -> None:
         return
 
     table = Table(show_header=True, header_style="bold magenta", box=box.ROUNDED)
-    table.add_column("INDEX", style="dim", width=5)
+    table.add_column("INDEX", style="bold green", width=5)
     table.add_column("Namespace")
     table.add_column("Pod")
     table.add_column("Container")
@@ -303,7 +298,9 @@ def watch_pod_counts() -> None:
     5) Pod Monitoring - 전체/정상/비정상 Pod 개수 출력 (2초 간격)
        namespace 지정 가능
     """
-    console.print("\n[5] Pod Monitoring (전체/정상/비정상 Pod 개수 출력)", style="bold blue")
+    console.print(
+        "\n[5] Pod Monitoring (전체/정상/비정상 Pod 개수 출력)", style="bold blue"
+    )
     ns = choose_namespace()
     console.print("\n(Ctrl+C로 중지 후 메뉴로 돌아갑니다.)", style="bold yellow")
     load_kube_config()
