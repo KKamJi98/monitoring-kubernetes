@@ -13,7 +13,7 @@ Kubernetes 클러스터에서 이벤트, Pod, Node 상태 등을 빠르게 확�
 1. **Event Monitoring**  
    - 전체 이벤트 혹은 정상(Normal)이 아닌 이벤트만 실시간(`watch`)으로 모니터링
 
-2. **재시작된 컨테이너 확인 및 로그 조회**
+2. **Container Monitoring (재시작된 컨테이너 및 로그)**
    - 최근에 재시작된 컨테이너를 시간 기준으로 정렬하여 확인하고, 특정 컨테이너의 이전 로그(-p 옵션)를 확인
 
 3. **Pod Monitoring**  
@@ -126,7 +126,7 @@ NODE_GROUP_LABEL = "node.kubernetes.io/app"
 Kubernetes Monitoring Tool
 ╭───┬───────────────────────────────────────────────────────────────────────────────────╮
 │ 1 │ Event Monitoring (Normal, !=Normal)                                               │
-│ 2 │ 재시작된 컨테이너 확인 및 로그 조회                                               │
+│ 2 │ Container Monitoring (재시작된 컨테이너 및 로그)                                  │
 │ 3 │ Pod Monitoring (생성된 순서) [옵션: Pod IP 및 Node Name 표시]                     │
 │ 4 │ Pod Monitoring (Running이 아닌 Pod) [옵션: Pod IP 및 Node Name 표시]              │
 │ 5 │ Pod Monitoring (전체/정상/비정상 Pod 개수 출력)                                   │
@@ -142,7 +142,7 @@ Kubernetes Monitoring Tool
 - 전체 이벤트 혹은 `type!=Normal` 이벤트를 실시간(`watch -n2`)으로 확인  
 - 최신 이벤트부터 tail -n [사용자 지정] 개수로 표시
 
-### 2. 재시작된 컨테이너 확인 및 로그 조회
+### 2. Container Monitoring (재시작된 컨테이너 및 로그)
 
 - 최근 재시작된 컨테이너의 종료 시점(`lastState.terminated.finishedAt`) 기준으로 내림차순 정렬 후, 목록에서 특정 컨테이너를 선택해 이전 로그(`kubectl logs -p`)를 확인
 - tail -n [사용자 지정] 개수만큼 로그를 볼 수 있음

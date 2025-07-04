@@ -179,7 +179,7 @@ def watch_event_monitoring() -> None:
 
 def view_restarted_container_logs() -> None:
     """
-    2) 재시작된 컨테이너 확인 및 로그 조회
+    2) Container Monitoring (재시작된 컨테이너 및 로그)
        최근 재시작된 컨테이너 목록에서 선택하여 이전 컨테이너의 로그 확인
     """
     console.print("\n[2] 재시작된 컨테이너 확인 및 로그 조회", style="bold blue")
@@ -457,7 +457,7 @@ def main_menu() -> str:
 
     menu_options = [
         ("1", "Event Monitoring (Normal, !=Normal)"),
-        ("2", "재시작된 컨테이너 확인 및 로그 조회"),
+        ("2", "Container Monitoring (재시작된 컨테이너 및 로그)"),
         ("3", "Pod Monitoring (생성된 순서) [옵션: Pod IP 및 Node Name 표시]"),
         ("4", "Pod Monitoring (Running이 아닌 Pod) [옵션: Pod IP 및 Node Name 표시]"),
         ("5", "Pod Monitoring (전체/정상/비정상 Pod 개수 출력)"),
