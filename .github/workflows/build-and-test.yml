@@ -21,6 +21,8 @@ jobs:
         run: pip install uv
       - name: Create virtual environment
         run: uv venv
+      - name: Activate virtual environment
+        run: source .venv/bin/activate
       - name: Install dependencies
         run: uv pip install .
       - name: Install dev dependencies
@@ -28,7 +30,7 @@ jobs:
       - name: Run Black
         run: black . --check
       - name: Run Ruff
-        run: ruff . --fix --exit-non-zero-on-fix
+        run: ruff check . --fix --exit-non-zero-on-fix
       - name: Run MyPy
         run: mypy .
       - name: Run tests with Pytest and Pytest-Cov
