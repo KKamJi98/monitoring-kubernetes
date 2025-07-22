@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Rename '재시작된 컨테이너 확인 및 로그 조회' menu to 'Container Monitoring (재시작된 컨테이너 및 로그)' for consistency.
 
+## [1.4.0](https://github.com/KKamJi98/monitoring-kubernetes/compare/v1.3.0...v1.4.0) (2025-07-22)
+
+
+### Features
+
+* support kubecolor for kubectl commands ([0eabe89](https://github.com/KKamJi98/monitoring-kubernetes/commit/0eabe8999ac0bc3396d2982113349ef170af98c6))
+
 ## [1.3.0](https://github.com/KKamJi98/monitoring-kubernetes/compare/v1.2.0...v1.3.0) (2025-07-04)
 
 
