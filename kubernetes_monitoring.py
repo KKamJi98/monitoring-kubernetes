@@ -148,11 +148,6 @@ def get_pods(v1_api: CoreV1Api, namespace: Optional[str] = None) -> List[V1Pod]:
         return []
 
 
-def get_kubectl_command() -> str:
-    """환경 변수 KUBE_COMMAND를 확인하여 kubectl 또는 kubecolor를 반환"""
-    return os.environ.get("KUBE_COMMAND", "kubectl")
-
-
 def watch_event_monitoring() -> None:
     """
     1) Event Monitoring
@@ -166,12 +161,11 @@ def watch_event_monitoring() -> None:
     )
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
 
-    kubectl_cmd = get_kubectl_command()
     ns_option = f"-n {ns}" if ns else "-A"
     if event_choice == "2":
-        cmd = f'watch -n2 "{kubectl_cmd} get events {ns_option} --field-selector type!=Normal --sort-by=".metadata.managedFields[].time" | tail -n {tail_num}"'
+        cmd = f'watch -n2 "kubectl get events {ns_option} --field-selector type!=Normal --sort-by=".metadata.managedFields[].time" | tail -n {tail_num}"'
     else:
-        cmd = f'watch -n2 "{kubectl_cmd} get events {ns_option} --sort-by=".metadata.managedFields[].time" | tail -n {tail_num}"'
+        cmd = f'watch -n2 "kubectl get events {ns_option} --sort-by=".metadata.managedFields[].time" | tail -n {tail_num}"'
     console.print(
         f"\n실행 명령어: [green]{cmd}[/green]\n(Ctrl+C로 중지)\n", style="bold"
     )
@@ -246,8 +240,7 @@ def view_restarted_container_logs() -> None:
             "입력하신 값이 숫자가 아닙니다. 50줄을 출력합니다.", style="bold red"
         )
         log_tail = "50"
-    kubectl_cmd = get_kubectl_command()
-    cmd = f"{kubectl_cmd} logs -n {ns_pod} -p {p_name} -c {c_name} --tail={log_tail}"
+    cmd = f"kubectl logs -n {ns_pod} -p {p_name} -c {c_name} --tail={log_tail}"
     print(f"\n실행 명령어: {cmd}\n")
     os.system(cmd)
 
@@ -265,12 +258,11 @@ def watch_pod_monitoring_by_creation() -> None:
         .lower()
     )
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
-    kubectl_cmd = get_kubectl_command()
     ns_option = f"-n {ns}" if ns else "-A"
     if extra.startswith("y"):
-        cmd = f'watch -n2 "{kubectl_cmd} get po {ns_option} -o wide --sort-by=.metadata.creationTimestamp | tail -n {tail_num}"'
+        cmd = f'watch -n2 "kubectl get po {ns_option} -o wide --sort-by=.metadata.creationTimestamp | tail -n {tail_num}"'
     else:
-        cmd = f'watch -n2 "{kubectl_cmd} get po {ns_option} --sort-by=.metadata.creationTimestamp | tail -n {tail_num}"'
+        cmd = f'watch -n2 "kubectl get po {ns_option} --sort-by=.metadata.creationTimestamp | tail -n {tail_num}"'
     console.print(
         f"\n실행 명령어: [green]{cmd}[/green]\n(Ctrl+C로 중지)\n", style="bold"
     )
@@ -290,12 +282,11 @@ def watch_non_running_pod() -> None:
         .lower()
     )
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
-    kubectl_cmd = get_kubectl_command()
     ns_option = f"-n {ns}" if ns else "-A"
     if extra.startswith("y"):
-        cmd = f'''watch -n2 "{kubectl_cmd} get pods {ns_option} -o wide | grep -ivE ' Running' | tail -n {tail_num}"'''
+        cmd = f"watch -n2 \"kubectl get pods {ns_option} -o wide | grep -ivE ' Running' | tail -n {tail_num}\""
     else:
-        cmd = f'''watch -n2 "{kubectl_cmd} get pods {ns_option} | grep -ivE ' Running' | tail -n {tail_num}"'''
+        cmd = f"watch -n2 \"kubectl get pods {ns_option} | grep -ivE ' Running' | tail -n {tail_num}\""
     console.print(
         f"\n실행 명령어: [green]{cmd}[/green]\n(Ctrl+C로 중지)\n", style="bold"
     )
@@ -347,17 +338,16 @@ def watch_node_monitoring_by_creation() -> None:
         filter_nodegroup = ""
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
 
-    kubectl_cmd = get_kubectl_command()
     if filter_nodegroup:
         # label selector를 사용해서 정확히 일치하는 노드만 필터링
         cmd = (
-            f'watch -n2 "{kubectl_cmd} get nodes -l {NODE_GROUP_LABEL}={filter_nodegroup} '
+            f'watch -n2 "kubectl get nodes -l {NODE_GROUP_LABEL}={filter_nodegroup} '
             f"-L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} "
             f'--sort-by=.metadata.creationTimestamp | tail -n {tail_num}"'
         )
     else:
         cmd_base = (
-            f"{kubectl_cmd} get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} "
+            f"kubectl get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} "
             f"--sort-by=.metadata.creationTimestamp"
         )
         cmd = f'watch -n2 "{cmd_base} | tail -n {tail_num}"'
@@ -385,15 +375,14 @@ def watch_unhealthy_nodes() -> None:
         filter_nodegroup = ""
     tail_num = get_tail_lines("몇 줄씩 확인할까요? (예: 20): ")
 
-    kubectl_cmd = get_kubectl_command()
     # label selector를 사용해서 정확한 노드 그룹으로 필터링
     if filter_nodegroup:
-        cmd_base = f"{kubectl_cmd} get nodes -l {NODE_GROUP_LABEL}={filter_nodegroup} -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
+        cmd_base = f"kubectl get nodes -l {NODE_GROUP_LABEL}={filter_nodegroup} -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
     else:
-        cmd_base = f"{kubectl_cmd} get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
+        cmd_base = f"kubectl get nodes -L topology.ebs.csi.aws.com/zone -L {NODE_GROUP_LABEL} --sort-by=.metadata.creationTimestamp"
 
     # 'Ready' 상태가 아닌 노드들만 표시
-    cmd = f'''watch -n2 "{cmd_base} | grep -ivE ' Ready ' | tail -n {tail_num}"'''
+    cmd = f"watch -n2 \"{cmd_base} | grep -ivE ' Ready ' | tail -n {tail_num}\""
     console.print(f"실행 명령어: [green]{cmd}[/green]\n(Ctrl+C로 중지)\n", style="bold")
     os.system(cmd)
 
@@ -433,13 +422,12 @@ def watch_node_resources() -> None:
     if filter_choice.startswith("y"):
         filter_nodegroup = choose_node_group() or ""
 
-    kubectl_cmd = get_kubectl_command()
     # NodeGroup 필터링 시, label selector를 사용하도록 변경 (grep 대신)
     if filter_nodegroup:
         # NODE_GROUP_LABEL=<filter_nodegroup> 형태로 필터링
-        cmd = f"{kubectl_cmd} top node -l {NODE_GROUP_LABEL}={filter_nodegroup} --no-headers"
+        cmd = f"kubectl top node -l {NODE_GROUP_LABEL}={filter_nodegroup} --no-headers"
     else:
-        cmd = f"{kubectl_cmd} top node --no-headers"
+        cmd = "kubectl top node --no-headers"
 
     # sort -k3 or -k5 -nr로 정렬 후, head로 상위 N개만
     cmd += f" | sort -k{sort_column} -nr 2>/dev/null | head -n {top_n}"

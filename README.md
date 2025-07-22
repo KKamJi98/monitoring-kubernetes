@@ -32,7 +32,6 @@ Kubernetes 클러스터에서 이벤트, Pod, Node 상태 등을 빠르게 확�
     -   [rich](https://pypi.org/project/rich/)
 -   **uv** (패키지 관리자)
 -   **kubectl** (Kubernetes Client)
--   **kubecolor** ([Optional] for colorized output)
 
 ## Installation & Usage
 
@@ -100,16 +99,6 @@ Kubernetes 클러스터에서 이벤트, Pod, Node 상태 등을 빠르게 확�
 ```shell
 export PATH=$PATH:/usr/local/bin
 ```
-
-### `KUBE_COMMAND` 환경 변수 사용
-
-`KUBE_COMMAND` 환경 변수를 설정하여 `kubectl` 대신 `kubecolor`와 같은 다른 명령어를 사용할 수 있습니다.
-
-```shell
-export KUBE_COMMAND="kubecolor"
-```
-
-`.bashrc` 또는 `.zshrc`에 위 내용을 추가하면 터미널 세션에 영구적으로 적용할 수 있습니다.
 
 #### 짧은 명령어로 사용하기 (Alias)
 
