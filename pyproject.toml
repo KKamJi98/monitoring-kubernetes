@@ -18,7 +18,6 @@ dev = [
     "pytest",
     "pytest-cov",
     "ruff",
-    "black",
     "mypy",
 ]
 
@@ -26,17 +25,16 @@ dev = [
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
-line-length = 88
-target-version = ['py38']
-
 [tool.ruff]
 line-length = 88
 target-version = "py38"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"] # Error, Flake8, Warnings, isort
-ignore = ["E501"] # Line too long, handled by black
+ignore = ["E501"] # Line too long, handled by formatter
+
+[tool.ruff.format]
+line-ending = "lf"
 
 [tool.mypy]
 python_version = "3.8"
