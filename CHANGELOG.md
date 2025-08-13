@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Rename '재시작된 컨테이너 확인 및 로그 조회' menu to 'Container Monitoring (재시작된 컨테이너 및 로그)' for consistency.
 
+## [1.4.0](https://github.com/KKamJi98/monitoring-kubernetes/compare/v1.3.0...v1.4.0) (2025-08-13)
+
+
+### Features
+
+* support kubecolor for kubectl commands ([0eabe89](https://github.com/KKamJi98/monitoring-kubernetes/commit/0eabe8999ac0bc3396d2982113349ef170af98c6))
+
+
+### Bug Fixes
+
+* treat Succeeded pods as normal in counts ([4efc9b7](https://github.com/KKamJi98/monitoring-kubernetes/commit/4efc9b72764f1beed32da4c31cac8c8fc2868777))
+
+
+### Documentation
+
+* update README for Ruff and dev workflow ([a1aa14a](https://github.com/KKamJi98/monitoring-kubernetes/commit/a1aa14a5801948048903cdb88f5a8426a05c1fdc))
+
 ## [1.3.0](https://github.com/KKamJi98/monitoring-kubernetes/compare/v1.2.0...v1.3.0) (2025-07-04)
 
 
