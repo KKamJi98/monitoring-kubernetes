@@ -309,12 +309,16 @@ def watch_pod_counts() -> None:
         while True:
             pods = get_pods(v1, ns)
             total = len(pods)
-            running = sum(1 for p in pods if p.status.phase == "Running")
-            abnormal = total - running
+            normal = sum(
+                1
+                for p in pods
+                if getattr(p.status, "phase", None) in ("Running", "Succeeded")
+            )
+            abnormal = total - normal
             console.clear()
             console.print("=== Pod Count Summary ===", style="bold blue")
             console.print(f"Total Pods    : [green]{total}[/green]")
-            console.print(f"Running Pods  : [green]{running}[/green]")
+            console.print(f"Normal Pods   : [green]{normal}[/green]")
             console.print(f"Abnormal Pods : [red]{abnormal}[/red]")
             time.sleep(2)
     except KeyboardInterrupt:
