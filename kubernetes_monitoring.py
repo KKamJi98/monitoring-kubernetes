@@ -37,6 +37,8 @@ def cleanup() -> None:
 
 def _exit_with_cleanup(code: int, message: str, style: str = "bold yellow") -> None:
     """메시지를 출력하고 정리 후 지정된 코드로 종료."""
+    # 요구사항: 메시지 앞에 한 줄 공백 출력
+    print()
     console.print(message, style=style)
     cleanup()
     sys.exit(code)
