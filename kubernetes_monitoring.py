@@ -25,6 +25,72 @@ console = Console()
 NODE_GROUP_LABEL = "node.kubernetes.io/app"
 
 
+def cleanup() -> None:
+    """리소스 정리 및 종료 전 후처리.
+
+    현재는 외부 리소스를 별도로 잡지 않지만, 추후 확장을 대비해
+    공통 정리 지점을 한곳으로 모읍니다.
+    """
+    # 필요한 경우, 추가 정리 작업을 이곳에 배치합니다.
+    console.print("정리 중...", style="dim")
+
+
+def _exit_with_cleanup(code: int, message: str, style: str = "bold yellow") -> None:
+    """메시지를 출력하고 정리 후 지정된 코드로 종료."""
+    console.print(message, style=style)
+    cleanup()
+    sys.exit(code)
+
+
+def setup_asyncio_graceful_shutdown() -> None:
+    """
+    asyncio 사용 시 SIGINT/SIGTERM를 graceful 하게 처리하기 위한 유틸리티.
+
+    이 함수는 런타임에 호출될 때만 의존성을 import 하며, 현재 스크립트가
+    동기 방식으로 동작할 때는 불필요한 오버헤드를 만들지 않습니다.
+    """
+    try:
+        import asyncio
+        import contextlib
+        import signal
+    except Exception:
+        return
+
+    loop = asyncio.get_event_loop()
+
+    stop_event = asyncio.Event()
+
+    def _handle_signal(sig: int) -> None:
+        console.print(
+            f"신호 수신: {signal.Signals(sig).name}. 안전 종료를 시작합니다.",
+            style="bold yellow",
+        )
+        stop_event.set()
+
+    for sig in (getattr(signal, "SIGINT", None), getattr(signal, "SIGTERM", None)):
+        if sig is not None:
+            try:
+                loop.add_signal_handler(sig, _handle_signal, sig)
+            except NotImplementedError:
+                # Windows 등 일부 환경에서는 add_signal_handler 미지원
+                pass
+
+    async def _graceful_shutdown(timeout: float = 10.0) -> None:
+        await stop_event.wait()
+        tasks = [
+            t for t in asyncio.all_tasks(loop) if t is not asyncio.current_task(loop)
+        ]
+        for t in tasks:
+            t.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await asyncio.gather(*tasks, return_exceptions=True)
+        cleanup()
+
+    # 호출 측에서 생성한 메인 코루틴과 함께 사용하도록 안내 목적.
+    # 예: await asyncio.gather(main(), _graceful_shutdown())
+    globals()["_async_graceful_shutdown"] = _graceful_shutdown  # for advanced usage
+
+
 def load_kube_config() -> None:
     """kube config 로드 (예외처리 포함)"""
     try:
@@ -487,29 +553,35 @@ def main() -> None:
     """
     메인 함수 실행
     """
-    while True:
-        choice = main_menu()
-        if choice == "1":
-            watch_event_monitoring()
-        elif choice == "2":
-            view_restarted_container_logs()
-        elif choice == "3":
-            watch_pod_monitoring_by_creation()
-        elif choice == "4":
-            watch_non_running_pod()
-        elif choice == "5":
-            watch_pod_counts()
-        elif choice == "6":
-            watch_node_monitoring_by_creation()
-        elif choice == "7":
-            watch_unhealthy_nodes()
-        elif choice == "8":
-            watch_node_resources()
-        elif choice.upper() == "Q":
-            print("Exiting...")
-            sys.exit(0)
-        else:
-            print("잘못된 입력입니다. 메뉴에 표시된 숫자 또는 Q를 입력하세요.")
+    try:
+        while True:
+            choice = main_menu()
+            if choice == "1":
+                watch_event_monitoring()
+            elif choice == "2":
+                view_restarted_container_logs()
+            elif choice == "3":
+                watch_pod_monitoring_by_creation()
+            elif choice == "4":
+                watch_non_running_pod()
+            elif choice == "5":
+                watch_pod_counts()
+            elif choice == "6":
+                watch_node_monitoring_by_creation()
+            elif choice == "7":
+                watch_unhealthy_nodes()
+            elif choice == "8":
+                watch_node_resources()
+            elif choice.upper() == "Q":
+                _exit_with_cleanup(0, "정상 종료합니다.", style="bold green")
+            else:
+                print("잘못된 입력입니다. 메뉴에 표시된 숫자 또는 Q를 입력하세요.")
+    except KeyboardInterrupt:
+        _exit_with_cleanup(130, "사용자 중단(Ctrl+C) 감지: 안전하게 종료합니다.")
+    except EOFError:
+        _exit_with_cleanup(
+            0, "입력이 종료되었습니다(EOF). 정상 종료합니다.", style="bold green"
+        )
 
 
 if __name__ == "__main__":
